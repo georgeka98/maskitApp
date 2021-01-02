@@ -1,5 +1,8 @@
 {
   "expo": {
+    "facebookScheme": "fb1047121222092614",
+    "facebookAppId": "1047121222092614",
+    "facebookDisplayName": "maskIt",
     "name": "tutorial",
     "slug": "tutorial",
     "version": "1.0.0",
