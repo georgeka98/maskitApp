@@ -1,25 +1,34 @@
 import React, { useEffect, state } from "react";
 
-import {StyleSheet, Keyboard, Text, View, TouchableWithoutFeedback, KeyboardAvoidingView, Image, ScrollView, Alert} from 'react-native';
+import {StyleSheet, Keyboard, Text, View, TouchableWithoutFeedback, KeyboardAvoidingView, Image, ScrollView, Alert, Button} from 'react-native';
 import Defaults from "../constrains/Defaults";
 import AddMask from './AddMask';
 
-// import * as Permissions from 'expo-permissions';
-// import { Constants, Notifications } from 'expo';
+import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import styled from 'styled-components';
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 export default function Home({navigation}) {
 
   let maskWearingColors = ["#3ED47D", "#EFCC74", "#EF7474"];
-  let maskWearingMesseges = ["Not Wearing Mask", "Wearing Mask", "Remove Soon", "Mask Overtime"]
+  let maskWearingMesseges = ["Not Wearing Mask", "Wearing Mask", "Remove Soon", "Mask Overtime"];
+  const notifications = [["Remove mask soon!", 'Your mask needs to be removed within 30 minutes.'],["Remove mask!", 'Your mask needs to be disposed within 1 minute.']];
 
   const [expoPushToken, setExpoPushToken] = React.useState('');
   const [notification, setNotification] = React.useState(false);
   const notificationListener = React.useRef();
   const responseListener = React.useRef();
+  const [notificationsSent, setNotificationsSent] = React.useState([false,false])
 
   const [intervalRef, setIntervalRef] = React.useState(null)
   const [maskUsing, setMaskUsing] = React.useState(null);
@@ -44,16 +53,31 @@ export default function Home({navigation}) {
     }
     else
     {
-      if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 0){
+      if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 0){ // mask expired
         setWearingMaskColor(2);
         setWearingMaskLabel(maskWearingMesseges[3]);
         setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
+
+
+        if(maskUsing.maxWearTime - (timeNow - maskUseBegun) > -2){
+          if(!notificationsSent[1]){
+            schedulePushNotification(notifications[1][0],notifications[1][1]);
+            setNotificationsSent([true,true])
+          }
+        }
       }
       else{
         if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 1800){ // 30 minutes left till mask wears out
           setWearingMaskColor(2);
           setWearingMaskLabel(maskWearingMesseges[2]);
           setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
+
+          if(maskUsing.maxWearTime - (timeNow - maskUseBegun) > 1798){
+            if(!notificationsSent[0]){
+              schedulePushNotification(notifications[0][0],notifications[0][1]);
+              setNotificationsSent([true,false])
+            }
+          }
         }
         else{
           setWearingMaskColor(1);
@@ -84,70 +108,66 @@ export default function Home({navigation}) {
     }
   }, [maskUsing, maskUseBegun]);
 
-  // _handleButtonPress = async () => {
-  //   await Notifications.scheduleNotificationAsync({
-  //     content: {
-  //       title: "You've got mail! 📬",
-  //       body: 'Here is the notification body',
-  //       data: { data: 'goes here' },
-  //     },
-  //     trigger: { seconds: 2 },
-  //   });
-  // };
+  // notifications 
+  React.useEffect(() => {
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
 
-  // async function registerForPushNotificationsAsync() {
-  //   let token;
-  //   if (Constants.isDevice) {
-  //     const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  //     let finalStatus = existingStatus;
-  //     if (existingStatus !== 'granted') {
-  //       const { status } = await Notifications.requestPermissionsAsync();
-  //       finalStatus = status;
-  //     }
-  //     if (finalStatus !== 'granted') {
-  //       alert('Failed to get push token for push notification!');
-  //       return;
-  //     }
-  //     token = (await Notifications.getExpoPushTokenAsync()).data;
-  //     console.log(token);
-  //   } else {
-  //     alert('Must use physical device for Push Notifications');
-  //   }
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener);
+      Notifications.removeNotificationSubscription(responseListener);
+    };
+  }, []);
+
+  async function schedulePushNotification(title, desc) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: title,
+        body: desc,
+        data: { data: 'goes here' },
+      },
+      trigger: { seconds: 2 },
+    });
+  }
   
-  //   if (Platform.OS === 'android') {
-  //     Notifications.setNotificationChannelAsync('default', {
-  //       name: 'default',
-  //       importance: Notifications.AndroidImportance.MAX,
-  //       vibrationPattern: [0, 250, 250, 250],
-  //       lightColor: '#FF231F7C',
-  //     });
-  //   }
+  async function registerForPushNotificationsAsync() {
+    let token;
+    if (Constants.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        alert('Failed to get push token for push notification!');
+        return;
+      }
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+      console.log(token);
+    } else {
+      alert('Must use physical device for Push Notifications');
+    }
   
-  //   return token;
-  // }
-
-  // // notifications 
-  // React.useEffect(() => {
-  //   registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
-
-
-  //   // Notifications.addNotificationReceivedListener(notification => {
-  //   //   setNotification(notification);
-  //   // });
-
-  //   notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-  //     setNotification(notification);
-  //   });
-
-  //   responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-  //     console.log(response);
-  //   });
-
-  //   return () => {
-  //     Notifications.removeNotificationSubscription(notificationListener);
-  //     Notifications.removeNotificationSubscription(responseListener);
-  //   };
-  // }, []);
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+  
+    return token;
+  }
+  
 
   React.useEffect(() => {
     
@@ -166,7 +186,7 @@ export default function Home({navigation}) {
  
     getChosenMasks();
 
-  }, [])
+  }, []);
 
   const timeLeftFormat = () => {
 
@@ -188,7 +208,7 @@ export default function Home({navigation}) {
 
   const wearOrRemoveMask = async () =>{
 
-    this._handleButtonPress();
+    setNotificationsSent([false,false])
 
     try{
 
@@ -197,12 +217,21 @@ export default function Home({navigation}) {
       if(maskUsing !== null && maskUseBegun !== null){
 
         let duration = timeNow - maskUseBegun;
-    
-        // if(duration > 30 * 60) // mnask worn for longer than 30 minutes straight
-        // {
-          AsyncStorage.removeItem("currentMaskUsing");
-          AsyncStorage.removeItem("wearStarted");
+  
+        AsyncStorage.removeItem("currentMaskUsing");
+        AsyncStorage.removeItem("wearStarted");
+
+        // reset to no wearing mask
+        await clearInterval(intervalRef)
+
+        setMaskUsing(null);
+        setMaskUseBegun(null);
+        setWearingMaskColor(0);
+        setWearingMaskLabel(maskWearingMesseges[0]);
+        setWearingMaskTimeLeft(0);
       
+        if(duration > 30 * 60) // mnask worn for longer than 30 minutes straight
+        {
           // mask history object
           let maskWornDetailsObj = {
             maskID: maskUsing.id,
@@ -226,15 +255,6 @@ export default function Home({navigation}) {
   
             AsyncStorage.setItem("masksWornHistory", JSON.stringify(masksWornHistory));
           }
-  
-          // reset to no wearing mask
-          await clearInterval(intervalRef)
-  
-          setMaskUsing(null);
-          setMaskUseBegun(null);
-          setWearingMaskColor(0);
-          setWearingMaskLabel(maskWearingMesseges[0]);
-          setWearingMaskTimeLeft(0);
 
           // update impact
           let impact = await AsyncStorage.getItem("dailyImpact");
@@ -282,7 +302,7 @@ export default function Home({navigation}) {
               AsyncStorage.setItem("dailyImpact", JSON.stringify(impactArr));
             }
           }
-        // }
+        }
 
       }
       else{
