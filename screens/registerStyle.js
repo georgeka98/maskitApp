@@ -34,7 +34,7 @@ export default {
 btnDefault:{
   width: "90%",
   borderRadius: 10,
-  backgroundColor: defautls.light.main,
+  backgroundColor: defautls.pallete.main,
   padding: 15,
   shadowColor: "#000",
   shadowOffset: {
@@ -48,7 +48,7 @@ btnDefault:{
 btnSuccess:{
   width: "50%",
   borderRadius: 10,
-  backgroundColor: defautls.light.main,
+  backgroundColor: defautls.pallete.main,
   padding: 15,
   shadowColor: "#000",
   shadowOffset: {
@@ -63,7 +63,7 @@ btnSuccess:{
 
 
 changeRegistrationBtn:{
-    color: defautls.light.main,
+    color: defautls.pallete.main,
     fontWeight: "300",
     letterSpacing: 0,
     // textAlign: "center",
@@ -89,13 +89,13 @@ logoText: {
 },
 formTextInput: {
   width: 355,
-  height: 43,
+  height: 60,
   fontSize: 16,
   borderRadius: 10,
   borderWidth: 2,
-  borderColor: defautls.light.main,
-  backgroundColor: defautls.light.lightMain,
-  padding: 28,
+  borderColor: defautls.pallete.main,
+  backgroundColor: defautls.pallete.lightMain,
+  padding: 20,
 },
 
 loginButton: {

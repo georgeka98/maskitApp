@@ -1,12 +1,14 @@
 import React from "react";
 
-import {StyleSheet, Keyboard, View, TextInput, TouchableWithoutFeedback, Alert, KeyboardAvoidingView, Button} from 'react-native';
+import {StyleSheet, Keyboard, View, TextInput, TouchableWithoutFeedback, Alert, KeyboardAvoidingView, Button, Text} from 'react-native';
 
 import RegisterDefaults from "./registerStyle";
 import AppButton from '../components/TouchButton';
 import JoinNavLink from '../components/TouchButton copy';
+import firebase from '../constrains/firebase';
+import { storeData} from './helpers';
 
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const appId = "1047121222092614"
 
@@ -18,30 +20,28 @@ export default function SignUpEmail({navigation}) {
   const [email, onChangeEmail] = React.useState(null);
   const [password, onChangePassword] = React.useState(null);
   const [confirmPassowrd, onChangeConfirmPassowrd] = React.useState(null);
+  const [error, setError] = React.useState(null)
 
   const onLoginPress = () => {
     navigation.navigate('Login')
   }
 
-  const storeData = async () => {
-
-
-    try {
-      // setWelcomeScreen({"welcomeScreen": '1'})
-      await AsyncStorage.setItem( 'auth', '1' );
-
-    } catch (error) {
-      // Error saving data
-      alert(error)
-    }
-
-    return true;
-  }
-
   const onRegisterPress = () => {
   // .navigate('Home')
-    storeData();
-    navigation.navigate('NavTabs');
+
+    if(password != confirmPassowrd){
+      setError("Passowrd and Confirm Password fields do not match. Please ensure that you have typed the same password on both Passowrd and Confirm Password fields.");
+      return
+    }
+
+    try{
+      firebase.auth().createUserWithEmailAndPassword(email,password);
+      // storeData();
+      navigation.navigate('NavTabs');
+    }
+    catch(e){
+      setError(e.message)
+    }
   }
 
 
@@ -74,12 +74,16 @@ export default function SignUpEmail({navigation}) {
 
 
             <View style={RegisterDefaults.loginForm}>
-              <TextInput placeholder="Full Name" onChangeText={fullName => onChangeFullName(fullName)} value={fullName} placeholderColor="#c4c3cb" style={[RegisterDefaults.formTextInput, styles.input]} />
-              <TextInput placeholder="Username" onChangeText={userName => onChangeUserName(userName)} value={userName} placeholderColor="#c4c3cb" style={[RegisterDefaults.formTextInput, styles.input]} secureTextEntry={true}/>
-              <TextInput placeholder="Email" onChangeText={email => onChangeEmail(email)} value={email} placeholderColor="#c4c3cb" style={[RegisterDefaults.formTextInput, styles.input]} secureTextEntry={true}/>
+              {/* <TextInput placeholder="Full Name" onChangeText={fullName => onChangeFullName(fullName)} value={fullName} placeholderColor="#c4c3cb" style={[RegisterDefaults.formTextInput, styles.input]} />
+              <TextInput placeholder="Username" onChangeText={userName => onChangeUserName(userName)} value={userName} placeholderColor="#c4c3cb" style={[RegisterDefaults.formTextInput, styles.input]} secureTextEntry={true}/> */}
+              <TextInput placeholder="Email" onChangeText={email => onChangeEmail(email)} value={email} placeholderColor="#c4c3cb" style={[RegisterDefaults.formTextInput, styles.input]} />
               <TextInput placeholder="Password" onChangeText={password => onChangePassword(password)} value={password} placeholderColor="#c4c3cb" style={[RegisterDefaults.formTextInput, styles.input]} secureTextEntry={true}/>
               <TextInput placeholder="Retype Password" onChangeText={confirmPassowrd => onChangeConfirmPassowrd(confirmPassowrd)} value={confirmPassowrd} placeholderColor="#c4c3cb" style={[RegisterDefaults.formTextInput, styles.input]} secureTextEntry={true}/>
             </View>
+
+            {
+            error ? <Text style={{color: "red"}}>{error}</Text> : null
+          }
 
             <AppButton title="SIGN UP" onPress={() => onRegisterPress()} btnStyle={[RegisterDefaults.btnSuccess]}  textStyle={[RegisterDefaults.btnText]} />
             <View style={RegisterDefaults.otherRegisterView}>

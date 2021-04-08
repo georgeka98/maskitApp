@@ -60,7 +60,7 @@ export default NavTabs;
 const styles = StyleSheet.create({
 
   navbar:{
-    backgroundColor: Defaults.light.main,
+    backgroundColor: Defaults.pallete.main,
     paddingBottom: 10,
     paddingTop: 10,
     height: 70,

@@ -9,16 +9,20 @@ import {dateFormat, durationFormat} from './helpers';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function AddMask({navigation}) {
+export default function YourMasks({navigation}) {
+
+  // render() {
 
     let masksListJSON = require("../masks_list.json")
 
     const [selectedMasks, setSelectedMasks] = useState([]);
+    const [wearingMask, setWearingMask] = useState({})
+    const [wearingMaskID, setWearingMaskID] = useState("")
     const [visibility,setVisibility] = useState(false);
     const [maskExpand,setMaskExpand] = useState({title: "f", image: "../assets/masks/mask-1.png", description: "", activity: "", purchase_link: "https://mask-it.com", id: "0"});
     const [search,setSearch] = useState('');
-    const [maskList, setMaskList] = useState(masksListJSON)
-    const [filteredList, setFilteredList] = useState(masksListJSON)
+    const [maskList, setMaskList] = useState([])
+    const [filteredList, setFilteredList] = useState([])
 
     const updateSearch = (search) => {
       setSearch( search );
@@ -26,7 +30,6 @@ export default function AddMask({navigation}) {
     };
 
     const viewMask = (title,image,description,activity,purchase_link,id,maxWearTime,cost) => {
-
       setVisibility(visibility => !visibility);
       setMaskExpand({title: title, image: image, description: description, activity: activity, purchase_link: purchase_link, id: id, maxWearTime: maxWearTime, cost: cost})
     }
@@ -39,13 +42,37 @@ export default function AddMask({navigation}) {
 
     useEffect(() => {
       const getChosenMasks = async () => {
-        let chosenMasks = await AsyncStorage.getItem('selectedMasks');
 
-        await AsyncStorage.setItem( 'masksList', JSON.stringify(maskList) );
+        let selectedMasksArr = await AsyncStorage.getItem('selectedMasks');
+        let masksArrayCheck = await AsyncStorage.getItem('masksList');
+        let wearingMaskCheck = await AsyncStorage.getItem( 'currentMaskUsing' );
 
-        if(chosenMasks != null){
-          setSelectedMasks(JSON.parse(chosenMasks))
+        selectedMasksArr = JSON.parse(selectedMasksArr)
+        masksArrayCheck = JSON.parse(masksArrayCheck)
+
+        if(masksArrayCheck !== null)
+        {
+          selectedMasksFilter = [];
+
+          for(let j = 0; j < selectedMasksArr.length; j++)
+          {
+            for(let i = 0; i < masksArrayCheck.length; i++)
+            {
+              if(masksArrayCheck[i].id == selectedMasksArr[j]){
+                selectedMasksFilter.push(masksArrayCheck[i])
+              }
+            }
+          }
+
+          // console.log(selectedMasksFilter,selectedMasks,masksArrayCheck)
+
+          setMaskList(selectedMasksFilter);
+          setFilteredList(selectedMasksFilter)
         }
+
+        setWearingMask(JSON.parse(wearingMaskCheck))
+        setWearingMaskID(JSON.parse(wearingMaskCheck).id)
+
       }
    
      getChosenMasks();
@@ -66,8 +93,6 @@ export default function AddMask({navigation}) {
         }
         else{
           let elements = JSON.parse(masksArray);
-
-          console.log(elements)
 
           if(elements.length > 0){
             for(let i = 0; i < elements.length; i++)
@@ -139,11 +164,58 @@ export default function AddMask({navigation}) {
       );
     }
 
+    const wearMask = async (mask) => {
+
+      try{
+        let wearingMaskCheck = await AsyncStorage.getItem( 'currentMaskUsing' );
+        let timeNow = String(parseInt(Date.now()/1000)); // current time in seconds
+
+        if(wearingMaskCheck == null){
+          AsyncStorage.setItem("currentMaskUsing", JSON.stringify(mask));
+          AsyncStorage.setItem("wearStarted", timeNow);
+  
+          setWearingMask(mask)
+          setWearingMaskID(mask.id)
+        }
+        else{
+          if(JSON.parse(wearingMaskCheck).id != mask.id){
+            AsyncStorage.setItem("currentMaskUsing", JSON.stringify(mask));
+            AsyncStorage.setItem("wearStarted", timeNow);
+    
+            setWearingMask(mask)
+            setWearingMaskID(mask.id)
+          }
+          else{
+            AsyncStorage.removeItem("currentMaskUsing");
+            AsyncStorage.removeItem("wearStarted");
+    
+            setWearingMask({})
+            setWearingMaskID("")
+          }
+        }
+
+        setVisibility(false)
+        navigation.push('Home')
+
+      }
+      catch(e){
+        alert(e)
+      }
+    }
 
     return (
       <KeyboardAvoidingView behavior="padding">
   
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+
+      {/* <View style={[styles.maskExpand]}>
+                <View style={[styles.btnIcon ]}>
+                  <Image source={{uri: maskExpand.image}} style={styles.imageStyle} />
+                </View>
+                <View style={[styles.btnInfo ]}>
+                  <Text style={styles.btnInfoDescription}>{maskExpand.name}</Text>
+                </View>
+              </View> */}
         
         <ScrollView>
           <View style={styles.homeVeiw} >
@@ -165,7 +237,6 @@ export default function AddMask({navigation}) {
                   style={{height: 150, width: 150, marginVertical: 10}}
                 />
               </View>
-
               <View style={{marginBottom: 50, fontSize: 20, textAlign: 'center', alignItems: 'center'}}>
                 <View>
                   <Text style={styles.title}>{maskExpand.title}</Text>
@@ -181,11 +252,10 @@ export default function AddMask({navigation}) {
                   <Text style={styles.maskStats}>Price: {maskExpand.cost} $</Text>
                 </View>
               </View>
-              <AppButton title="Buy It"  onPress={() => Linking.openURL(maskExpand.purchase_link)} btnStyle={[welcomeBtnStyles.btn, styles.getit]}  textStyle={welcomeBtnStyles.btnText} />
-              <AppButton title={selectedMasks.includes(maskExpand.id) ? "Remove" : "Add"}  onPress={() => {selectMask(maskExpand.id)}} btnStyle={[welcomeBtnStyles.btn, styles.add]}  textStyle={welcomeBtnStyles.btnText}  />
+              <AppButton title={wearingMaskID != maskExpand.id ? "Wear" : "Remove"}  onPress={() => wearMask(maskExpand)} btnStyle={[welcomeBtnStyles.btn, styles.getit]}  textStyle={welcomeBtnStyles.btnText} />
             </ModalPoup>
 
-            <View style={styles.search} >
+            <View              style={styles.search} >
             <SearchBar
               placeholder="Type Here..."
               onChangeText={(value) => updateSearch(value)}
@@ -204,11 +274,12 @@ export default function AddMask({navigation}) {
                   </View>
                 </TouchableWithoutFeedback>
               ))}
-            </View>
+          </View>
         </ScrollView>
       </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     )
+  // }
 }
 
 const styles = StyleSheet.create({
@@ -221,7 +292,7 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
       width: '80%',
-      backgroundColor: 'white',
+      backgroundColor: Defaults.pallete.background,
       paddingHorizontal: 20,
       paddingVertical: 30,
       borderRadius: 30,
@@ -242,6 +313,10 @@ const styles = StyleSheet.create({
   homeVeiw:{
     padding: 30,
     position: "relative",
+  },
+  homeVeiw:{
+    position: "relative",
+    padding: 30,
   },
   button:{
     flexDirection: "row",
@@ -300,6 +375,7 @@ const styles = StyleSheet.create({
     marginBottom: 22, 
     borderRadius: 10,
   },
+
   title:{
     fontSize: 24,
     fontWeight: "700",

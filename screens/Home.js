@@ -1,92 +1,380 @@
-import React from "react";
+import React, { useEffect, state } from "react";
 
-import {StyleSheet, Keyboard, Text, View, TouchableWithoutFeedback, KeyboardAvoidingView, Image} from 'react-native';
+import {StyleSheet, Keyboard, Text, View, TouchableWithoutFeedback, KeyboardAvoidingView, Image, ScrollView, Alert} from 'react-native';
 import Defaults from "../constrains/Defaults";
+import AddMask from './AddMask';
+
+// import * as Permissions from 'expo-permissions';
+// import { Constants, Notifications } from 'expo';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // import styled from 'styled-components';
+
 
 export default function Home({navigation}) {
 
-  const [wearingMaskColor, setWearingMaskColor] = React.useState(0);
-  const [wearingMaskLabel, setWearingMaskLabel] = React.useState("Currently Wearing Mask");
-  const [wearingMaskTimeLeft, setwearingMaskTimeLeft] = React.useState(120); // in minutes
-
-  // 0 = green
-  // 1 = orange
-  // 2 = red
-
   let maskWearingColors = ["#3ED47D", "#EFCC74", "#EF7474"];
+  let maskWearingMesseges = ["Not Wearing Mask", "Wearing Mask", "Remove Soon", "Mask Overtime"]
 
-  const getWearingMaskTimeLeft = async () =>{
-    // get from Firebase
+  const [expoPushToken, setExpoPushToken] = React.useState('');
+  const [notification, setNotification] = React.useState(false);
+  const notificationListener = React.useRef();
+  const responseListener = React.useRef();
+
+  const [intervalRef, setIntervalRef] = React.useState(null)
+  const [maskUsing, setMaskUsing] = React.useState(null);
+  const [maskUseBegun, setMaskUseBegun] = React.useState(null);
+  const [wearingMaskColor, setWearingMaskColor] = React.useState(0);
+  const [wearingMaskLabel, setWearingMaskLabel] = React.useState(maskWearingMesseges[0]);
+  const [wearingMaskTimeLeft, setWearingMaskTimeLeft] = React.useState(0); // in minutes
+
+  // 0 = green - not wearing mask
+  // 1 = orange - wearing mask
+  // 2 = red - mask overdue/soon to remove
+
+  const updateMessage = async () =>{
+    
+    let timeNow = String(parseInt(Date.now()/1000)); // current time in seconds
+
+    if(maskUsing === null && maskUseBegun === null)
+    {
+      setWearingMaskColor(0);
+      setWearingMaskLabel(maskWearingMesseges[0]);
+      setWearingMaskTimeLeft(0)
+    }
+    else
+    {
+      if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 0){
+        setWearingMaskColor(2);
+        setWearingMaskLabel(maskWearingMesseges[3]);
+        setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
+      }
+      else{
+        if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 1800){ // 30 minutes left till mask wears out
+          setWearingMaskColor(2);
+          setWearingMaskLabel(maskWearingMesseges[2]);
+          setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
+        }
+        else{
+          setWearingMaskColor(1);
+          setWearingMaskLabel(maskWearingMesseges[1]);
+          setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
+        }
+      }
+    }
+  }
+  
+  const timer = () => {
+    
+    const interval = setInterval(() => {
+
+      updateMessage(maskUsing, maskUseBegun)
+    }, 1000 );
+
+    setIntervalRef(interval)
+
+    return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
   }
 
-  // DONT DELETE BELOW'S code!!! Use a timer)
+  // execute only when maskUsing and maskUseBegun have been changed
+  React.useEffect(() => {
+    if (maskUsing !=  null && maskUseBegun != null) {
+      updateMessage(maskUsing, maskUseBegun)
+      timer();
+    }
+  }, [maskUsing, maskUseBegun]);
 
-  // if(wearingMaskTimeLeft <= 60){
-  //   setWearingMaskLabel("Throw away soon");
-  //   setWearingMaskColor(2);
+  // _handleButtonPress = async () => {
+  //   await Notifications.scheduleNotificationAsync({
+  //     content: {
+  //       title: "You've got mail! 📬",
+  //       body: 'Here is the notification body',
+  //       data: { data: 'goes here' },
+  //     },
+  //     trigger: { seconds: 2 },
+  //   });
+  // };
+
+  // async function registerForPushNotificationsAsync() {
+  //   let token;
+  //   if (Constants.isDevice) {
+  //     const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  //     let finalStatus = existingStatus;
+  //     if (existingStatus !== 'granted') {
+  //       const { status } = await Notifications.requestPermissionsAsync();
+  //       finalStatus = status;
+  //     }
+  //     if (finalStatus !== 'granted') {
+  //       alert('Failed to get push token for push notification!');
+  //       return;
+  //     }
+  //     token = (await Notifications.getExpoPushTokenAsync()).data;
+  //     console.log(token);
+  //   } else {
+  //     alert('Must use physical device for Push Notifications');
+  //   }
+  
+  //   if (Platform.OS === 'android') {
+  //     Notifications.setNotificationChannelAsync('default', {
+  //       name: 'default',
+  //       importance: Notifications.AndroidImportance.MAX,
+  //       vibrationPattern: [0, 250, 250, 250],
+  //       lightColor: '#FF231F7C',
+  //     });
+  //   }
+  
+  //   return token;
   // }
-  // else if (wearingMaskTimeLeft > 60 && wearingMaskTimeLeft < 120){
-  //   setWearingMaskColor(1);
-  // }
-  // else{
-  //   setWearingMaskColor(0);
-  // }
 
-  const timeLeffFormat = () => {
+  // // notifications 
+  // React.useEffect(() => {
+  //   registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
 
-    let hours = Math.floor(wearingMaskTimeLeft / 60);
-    let minutes = wearingMaskTimeLeft % 60;
 
-    return hours+"h "+minutes+"m";
+  //   // Notifications.addNotificationReceivedListener(notification => {
+  //   //   setNotification(notification);
+  //   // });
+
+  //   notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+  //     setNotification(notification);
+  //   });
+
+  //   responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+  //     console.log(response);
+  //   });
+
+  //   return () => {
+  //     Notifications.removeNotificationSubscription(notificationListener);
+  //     Notifications.removeNotificationSubscription(responseListener);
+  //   };
+  // }, []);
+
+  React.useEffect(() => {
+    
+    const getChosenMasks = async () => {
+
+      let maskUsingCheck = await AsyncStorage.getItem("currentMaskUsing");
+      let maskUseBegunCheck = await AsyncStorage.getItem("wearStarted");
+
+      if(maskUsingCheck != null && maskUseBegunCheck != null){
+
+        setMaskUsing(JSON.parse(maskUsingCheck));
+        setMaskUseBegun(parseInt(maskUseBegunCheck));
+
+      }
+    }
+ 
+    getChosenMasks();
+
+  }, [])
+
+  const timeLeftFormat = () => {
+
+    let hours = Math.floor(wearingMaskTimeLeft / 3600);
+    let minutes = Math.floor(wearingMaskTimeLeft / 60) % 60;
+    let seconds = wearingMaskTimeLeft % 60;
+
+    return hours+"h "+minutes+"m "+seconds+"s";
+  }
+
+
+  const selectMask = () => {
+    navigation.push('Select Mask Menu')
+  }
+
+  const history = () => {
+    navigation.push('History')
+  }
+
+  const wearOrRemoveMask = async () =>{
+
+    this._handleButtonPress();
+
+    try{
+
+      let timeNow = String(parseInt(Date.now()/1000)); // current time in seconds
+
+      if(maskUsing !== null && maskUseBegun !== null){
+
+        let duration = timeNow - maskUseBegun;
+    
+        // if(duration > 30 * 60) // mnask worn for longer than 30 minutes straight
+        // {
+          AsyncStorage.removeItem("currentMaskUsing");
+          AsyncStorage.removeItem("wearStarted");
+      
+          // mask history object
+          let maskWornDetailsObj = {
+            maskID: maskUsing.id,
+            duration: duration,
+            maskWornDate: maskUseBegun,
+            maskRemovedDate: timeNow,
+          }
+  
+          // store mask used to history mask usage
+          let masksWornHistory = await AsyncStorage.getItem("masksWornHistory");
+
+          console.log(masksWornHistory,maskWornDetailsObj)
+  
+          if(masksWornHistory === null)
+          {
+            AsyncStorage.setItem("masksWornHistory", JSON.stringify([maskWornDetailsObj]));
+          }
+          else{
+            masksWornHistory = JSON.parse(masksWornHistory);
+            masksWornHistory.push(maskWornDetailsObj)
+  
+            AsyncStorage.setItem("masksWornHistory", JSON.stringify(masksWornHistory));
+          }
+  
+          // reset to no wearing mask
+          await clearInterval(intervalRef)
+  
+          setMaskUsing(null);
+          setMaskUseBegun(null);
+          setWearingMaskColor(0);
+          setWearingMaskLabel(maskWearingMesseges[0]);
+          setWearingMaskTimeLeft(0);
+
+          // update impact
+          let impact = await AsyncStorage.getItem("dailyImpact");
+
+          if(impact === null)
+          {
+            let impactObj = {
+              price: maskUsing.price,
+              weight: maskUsing.weight,
+              usage: duration,
+              date: timeNow
+            }
+
+            AsyncStorage.setItem("dailyImpact", JSON.stringify([impactObj]));
+          }
+          else{
+            let impactArr = JSON.parse(impact);
+
+            let currentDate = new Date(timeNow*1000);
+            let currentDay = currentDate.getDay()
+
+            let lastUpdated = new Date(impactArr[impactArr.length-1].date*1000);
+            let lastUpdatedDay = lastUpdated.getDay()
+
+            if(lastUpdatedDay != currentDay)
+            {
+              let impactObj = {
+                price: maskUsing.price,
+                weight: maskUsing.weight,
+                usage: duration,
+                date: timeNow
+              }
+
+              impactArr.push(impactObj)
+
+              AsyncStorage.setItem("dailyImpact", JSON.stringify(impactArr));
+            }
+            else{
+
+              impactArr[impactArr.length-1].price = Number(impactArr[impactArr.length-1].price) + Number(maskUsing.price);
+              impactArr[impactArr.length-1].weight = Number(impactArr[impactArr.length-1].weight) + Number(maskUsing.weight);
+              impactArr[impactArr.length-1].usage = Number(impactArr[impactArr.length-1].usage) + Number(duration);
+              impactArr[impactArr.length-1].date = timeNow;
+
+              AsyncStorage.setItem("dailyImpact", JSON.stringify(impactArr));
+            }
+          }
+        // }
+
+      }
+      else{
+        let masksWornHistory = await AsyncStorage.getItem("masksWornHistory");
+
+        if(masksWornHistory != null)
+        {
+          let recentMask = JSON.parse(masksWornHistory)[0];
+
+          let mask = {}
+          let maskList = await AsyncStorage.getItem("masksList");
+          maskList = JSON.parse(maskList)
+  
+          for(let i = 0; i < maskList.length; i++)
+          {
+            if(maskList[i].id == recentMask.maskID){
+              mask = maskList[i];
+            }
+          }
+
+          AsyncStorage.setItem("currentMaskUsing", JSON.stringify(mask));
+          AsyncStorage.setItem("wearStarted", String(timeNow));
+  
+          setMaskUsing(mask);
+          setMaskUseBegun(timeNow);
+        }
+      }
+
+    }
+    catch(e){
+      console.log(e)
+    }
 
   }
+
+  // const masksHistoryList = MasksSelected();
 
   // render() {
     return (
       <KeyboardAvoidingView behavior="padding">
-        <View style={styles.homeVeiw} >
-          <View style={[styles.maskWearingCont, styles.shadow, {backgroundColor: maskWearingColors[wearingMaskColor]}]}>
-            <View style={styles.wearingMaskDot}></View>
-            <Text style={styles.wearingMaskLabel}>{wearingMaskLabel}</Text>
-            <Text style={styles.timeLeft}>{timeLeffFormat()}</Text>
+        <ScrollView>
+          <View style={styles.homeVeiw} >
+            <View style={[styles.maskWearingCont, styles.shadow, {backgroundColor: maskWearingColors[wearingMaskColor]}]}>
+              <View style={styles.wearingMaskDot}></View>
+              <Text style={styles.wearingMaskLabel}>{wearingMaskLabel}</Text>
+              <Text style={styles.timeLeft}>{timeLeftFormat()}</Text>
+            </View>
+            <TouchableWithoutFeedback onPress={() => selectMask()}>
+              <View style={[styles.button, styles.shadow]}>
+                <View style={[styles.btnIcon ]}>
+                  <Image source={ require('../assets/mask-white.png') } style={styles.imageStyle} />
+                </View>
+                <View style={[styles.btnInfo ]}>
+                  <Text style={[styles.btnInfoHeader, {color: "white"}]}>Select Mask</Text>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+            <TouchableWithoutFeedback onPress={() => history()}>
+              <View style={[styles.button, styles.shadow, {backgroundColor: 'white'}]}>
+                <View style={[styles.btnIcon ]}>
+                  <Image source={ require('../assets/history-blue.png') } style={styles.imageStyle} />
+                </View>
+                <View style={[styles.btnInfo]}>
+                  <Text style={[styles.btnInfoHeader, {color: "black"}]}>History</Text>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+            <TouchableWithoutFeedback onPress={() => {wearOrRemoveMask(true)}}>
+              <View style={[styles.button, styles.shadow, styles.prevMask]}>
+                <View style={[styles.btnIcon ]}>
+                  <Image source={ maskUsing == null ? require('../assets/history-white.png') : require('../assets/cross.png')  } style={styles.imageStyle} />
+                </View>
+                <View style={[styles.btnInfo ]}>
+                  <Text style={[styles.btnInfoHeader, {color: "white"}]}>{maskUsing === null ? "Wear Recent Mask" : "Remove Mask"} </Text>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+            <View style={[styles.healthMessage, styles.shadow]}>
+              <View style={[styles.healthMessageHeader]}>
+                <View style={[styles.healthIconCont ]}>
+                  <Image source={ require('../assets/warningBell.png') } style={styles.healthIcon} />
+                </View>
+                <View style={[styles.healthHeader ]}>
+                  <Text style={styles.btnInfoHeader}>Guidelines from NHS</Text>
+                </View>
+              </View>
+              <View style={[styles.btnInfoDescriptionCont ]}>
+                <Text style={styles.btnInfoDescription}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </Text>
+              </View>
+            </View>
           </View>
-          <TouchableWithoutFeedback onPress={() => selectMask()}>
-            <View style={[styles.button, styles.shadow]}>
-              <View style={[styles.btnIcon ]}>
-                <Image source={ require('../assets/mask.png') } style={styles.imageStyle} />
-              </View>
-              <View style={[styles.btnInfo ]}>
-                <Text style={styles.btnInfoHeader}>Select Mask</Text>
-                <Text style={styles.btnInfoDescription}>Choose a mask to purchase/use depending on your activity.</Text>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-          <TouchableWithoutFeedback onPress={() => selectMask()}>
-            <View style={[styles.button, styles.shadow]}>
-              <View style={[styles.btnIcon ]}>
-                <Image source={ require('../assets/history.png') } style={styles.imageStyle} />
-              </View>
-              <View style={[styles.btnInfo ]}>
-                <Text style={styles.btnInfoHeader}>History</Text>
-                <Text style={styles.btnInfoDescription}>Mask you worn in the past and impact caused in the enviroment.</Text>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-          <View style={[styles.healthMessage, styles.shadow]}>
-            <View style={[styles.healthMessageHeader]}>
-              <View style={[styles.healthIconCont ]}>
-                <Image source={ require('../assets/warningBell.png') } style={styles.healthIcon} />
-              </View>
-              <View style={[styles.healthHeader ]}>
-                <Text style={styles.btnInfoHeader}>Guidelines from NHS</Text>
-              </View>
-            </View>
-            <View style={[styles.btnInfoDescriptionCont ]}>
-              <Text style={styles.btnInfoDescription}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </Text>
-            </View>
-          </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     );
   // }
@@ -97,26 +385,52 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 22,
+    backgroundColor: 'rgba(91, 116, 249, 1.0)',
+    // borderTopRightRadius: 10,
+    // borderBottomRightRadius: 10,
+    // borderTopLeftRadius: 10,
+    // borderBottomLeftRadius: 10,
+    borderRadius: 10,
+    padding:10,
+  },
+  prevMask:{
+    backgroundColor: "#52b4eb",
   },
   btnIcon:{
-    backgroundColor: "#F2F2F2",
-    paddingTop: 30,
-    paddingBottom: 30,
-    paddingLeft: 22,
-    paddingRight: 22,
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
+    paddingRight: 10
   },
-  btnInfo:{
-    backgroundColor: "#fff",
-    flexShrink: 1,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-    padding: 20
-  },
-  imageStyle:{
-    height: 64,
+  // btnIcon:{
+  //   backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  //   paddingTop: 30,
+  //   paddingBottom: 30,
+  //   paddingLeft: 22,
+  //   paddingRight: 22,
+  //   borderTopLeftRadius: 10,
+  //   borderBottomLeftRadius: 10,
+  // },
+  // btnInfo:{
+  //   // backgroundColor: 'rgba(52, 52, 52, 0.0)',
+  //   flexShrink: 1,
+  //   borderTopRightRadius: 10,
+  //   borderBottomRightRadius: 10,
+  //   padding: 20,
+  //   flex: 1,
+  // },
+  // btnIconPrev:{
+  //   backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  //   borderTopLeftRadius: 10,
+  //   borderBottomLeftRadius: 10,
+  //   paddingLeft: 22,
+  //   paddingRight: 22,
+  // },
+  imageStylePrev:{
+    height: 58,
     width: 64,
+  },
+
+  imageStyle:{
+    height: 48,
+    width: 48,
   },
 
   healthMessage:{
@@ -126,16 +440,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 20,
   },
+  btnInfo:{
+    flex: 1,
+    justifyContent: 'center', //Centered vertically
+    alignItems: 'center', // Centered horizontally
+  },
   btnInfoHeader:{
     fontSize: 24,
-    fontWeight: "700",
-    fontFamily: Defaults.text.fontFamily,
+    fontWeight: "500",
+    fontFamily: "System",
+    textAlign: "left",
+    alignSelf: 'stretch',
   },
   btnInfoDescription:{
     fontSize: 14,
     fontFamily: Defaults.text.fontFamily,
-  },
-  btnInfoDescriptionCont:{
+    textAlign: "left",
+    alignSelf: 'stretch',
   },
   healthMessageHeader:{
     flexDirection: "row",
@@ -162,13 +483,20 @@ const styles = StyleSheet.create({
   },
   homeVeiw:{
     padding: 30,
+    backgroundColor: Defaults.pallete.background,
+    // flex: 1,
+    // flexDirection: "column",
+    //   justifyContent: "flex-end",
   },
   maskWearingCont:{
     backgroundColor: "#F2F2F2",
     flexDirection:"row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingLeft: 24,
+    paddingRight: 24,
     borderRadius: 20 / 2,
   },
   timeLeft:{

@@ -1,9 +1,9 @@
-import palette from '../constrains/Defaults';
+import defaults from '../constrains/Defaults';
 import { StyleSheet } from 'react-native'
 
 const welcomeBtnStyles = StyleSheet.create({
   btn: {
-    backgroundColor: palette.light.main,
+    backgroundColor: defaults.pallete.main,
     fontFamily: "Avenir",
     textTransform: "uppercase",
     borderRadius: 30,

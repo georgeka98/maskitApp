@@ -1,0 +1,167 @@
+[
+ {
+  "id": "1",
+  "name": "Mask 1",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["walking", "shopping"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-1.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "2",
+  "name": "Mask 2",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["general"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-2.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "3",
+  "name": "Mask 3",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["gym"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-3.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "4",
+  "name": "Mask 4",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["hiking"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-4.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "5",
+  "name": "Mask 5",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["glasses"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-5.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "6",
+  "name": "Mask 6",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["aeroplane"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-6.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "7",
+  "name": "Mask 7",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["school"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-7.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "8",
+  "name": "Mask 8",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["long term"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-8.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "9",
+  "name": "Mask 9",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["driving"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-9.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "10",
+  "name": "Mask 10",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["walking", "shopping"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-10.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "11",
+  "name": "Mask 11",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["walking", "shopping"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-11.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "12",
+  "name": "Mask 12",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["walking", "shopping"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-12.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "13",
+  "name": "Mask 13",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["walking", "shopping"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-13.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "14",
+  "name": "Mask 14",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["walking", "shopping"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-14.png",
+"maxWearTime": 28800
+ },
+ {
+  "id": "15",
+  "name": "Mask 15",
+  "description": "General use mask.",
+  "price": 0.2,
+  "weight": 0.01,
+  "activity": ["walking", "shopping"],
+  "purchase_link": "https://amazon.com/mask-123456",
+  "image": "../assets/masks/mask-15.png",
+"maxWearTime": 28800
+ }
+]

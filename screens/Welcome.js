@@ -16,7 +16,7 @@ export default function Welcome({ navigation }) {
     const { x } = event.nativeEvent.contentOffset; // deconstructs the contentoffset object by returning only it's x value
     const indexOfNextScreen = Math.floor(x / width) < 0 ? 0 : Math.floor(x / width);
     const { currentPage } = sliderState; // deconstructs the contentoffset sliderState by returning only currentPage value
-
+    
     if (indexOfNextScreen !== currentPage) {
       setSliderState({
         ...sliderState,
@@ -29,6 +29,8 @@ export default function Welcome({ navigation }) {
   const { currentPage: pageIndex } = sliderState;
 
   const scroll = React.useRef(null);
+
+
 
   return (
 
@@ -76,7 +78,7 @@ const styles = StyleSheet.create({
     height: 15,
     width: 15,
     borderRadius: 15 / 2,
-    backgroundColor: palette.light.main,
+    backgroundColor: palette.pallete.main,
     marginLeft: 8,
     marginRight: 8,
   }

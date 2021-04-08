@@ -7,7 +7,12 @@ import Home from '../screens/Home';
 import About from '../screens/About';
 import Settings from '../screens/Settings';
 import AddMask from '../screens/AddMask';
+import SelectMaskMenu from '../screens/SelectMaskMenu';
+import YourMasks from '../screens/YourMasks';
 import User from '../screens/User';
+import SelectHistoryMenu from '../screens/SelectHistoryMenu';
+import MasksUsedHistory from '../screens/MasksUsedHistory';
+import MyImpact from '../screens/MyImpact';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -30,14 +35,20 @@ const HomeStackNavigator = () => {
     <Stack.Navigator screenOptions={screenOptionStyle}>
       <Stack.Screen name="Home" component={Home} options={{
         headerLeft: () => null,
-        headerRight: () => <Icon 
-                              reverse
-                              name='user'
-                              type='font-awesome'
-                              color='#00000000'
-                              onPress={() => {navigation.dispatch(CommonActions.navigate('User'))}}
-                            />,
+        // headerRight: () => <Icon 
+        //                       reverse
+        //                       name='user'
+        //                       type='font-awesome'
+        //                       color='#00000000'
+        //                       onPress={() => {navigation.dispatch(CommonActions.navigate('User'))}}
+        //                     />,
       }}></Stack.Screen>
+            <Stack.Screen name="Select Mask Menu" component={SelectMaskMenu} ></Stack.Screen>
+            <Stack.Screen name="Select Mask" component={AddMask} ></Stack.Screen>
+            <Stack.Screen name="Your Masks" component={YourMasks} ></Stack.Screen>
+            <Stack.Screen name="History" component={SelectHistoryMenu} ></Stack.Screen>
+            <Stack.Screen name="Masks Worn History" component={MasksUsedHistory} ></Stack.Screen>
+            <Stack.Screen name="My impact" component={MyImpact} ></Stack.Screen>
       <Stack.Screen name="User" component={User} ></Stack.Screen>
     </Stack.Navigator>
   );

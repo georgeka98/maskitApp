@@ -7,7 +7,7 @@ import JoinNavLink from '../components/TouchButton copy';
 
 import Defaults from "../constrains/Defaults";
 
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const appId = "1047121222092614"
 

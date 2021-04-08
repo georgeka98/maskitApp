@@ -5,7 +5,7 @@ import RegisterDefaults from "./registerStyle";
 import AppButton from '../components/TouchButton';
 import JoinNavLink from '../components/TouchButton copy';
 
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Defaults from "../constrains/Defaults";
 
 const appId = "1047121222092614"
