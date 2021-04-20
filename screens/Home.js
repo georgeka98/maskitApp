@@ -3,11 +3,16 @@ import React, { useEffect, state } from "react";
 import {StyleSheet, Keyboard, Text, View, TouchableWithoutFeedback, KeyboardAvoidingView, Image, ScrollView, Alert, Button} from 'react-native';
 import Defaults from "../constrains/Defaults";
 import AddMask from './AddMask';
+import {useNetInfo} from "@react-native-community/netinfo";
 
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { firestore } from "firebase";
+import firebase from 'firebase';
+import 'firebase/firestore';
+
 // import styled from 'styled-components';
 
 Notifications.setNotificationHandler({
@@ -20,9 +25,10 @@ Notifications.setNotificationHandler({
 
 export default function Home({navigation}) {
 
-  let maskWearingColors = ["#3ED47D", "#EFCC74", "#EF7474"];
-  let maskWearingMesseges = ["Not Wearing Mask", "Wearing Mask", "Remove Soon", "Mask Overtime"];
+  const maskWearingColors = ["#3ED47D", "#EFCC74", "#EF7474"];
+  const maskWearingMesseges = ["Not Wearing Mask", "Wearing Mask", "Remove Soon", "Mask Overtime"];
   const notifications = [["Remove mask soon!", 'Your mask needs to be removed within 30 minutes.'],["Remove mask!", 'Your mask needs to be disposed within 1 minute.']];
+  const netInfo = useNetInfo();
 
   const [expoPushToken, setExpoPushToken] = React.useState('');
   const [notification, setNotification] = React.useState(false);
@@ -185,8 +191,60 @@ export default function Home({navigation}) {
     }
  
     getChosenMasks();
+    downloadFromFirebase();
 
-  }, []);
+  }, [netInfo.type.toLowerCase(),netInfo.isConnected]);
+
+  const downloadFromFirebase = () => {
+
+    if(netInfo.type.toLowerCase() == "wifi" && netInfo.isConnected){
+
+      firebase.firestore().collection("masksample").get().then(querySnapshot => {
+
+        let masksFormatted = [];
+
+        querySnapshot.forEach(doc => {
+
+          console.log(doc.id, '=>', doc.data());
+
+          masksFormatted.push(doc.data())
+          
+          var storageRef = firebase.storage().ref();
+
+          storageRef.child('images/stars.jpg').getDownloadURL()
+          .then((url) => {
+            // `url` is the download URL for 'images/stars.jpg'
+
+            // This can be downloaded directly:
+            var xhr = new XMLHttpRequest();
+            xhr.responseType = 'blob';
+            xhr.onload = (event) => {
+              var blob = xhr.response;
+            };
+            xhr.open('GET', url);
+            xhr.send();
+
+            // Or inserted into an <img> element
+            var img = document.getElementById('myimg');
+            img.setAttribute('src', url);
+          })
+          .catch((error) => {
+            // Handle any errors
+          });
+
+          // // Create a reference from an HTTPS URL
+          // // Note that in the URL, characters are URL escaped!
+          // var httpsReference = storage.refFromURL('https://firebasestorage.googleapis.com/b/bucket/o/images%20stars.jpg');
+
+        });
+
+        console.log(JSON.stringify(masksFormatted))
+
+      })
+
+    }
+
+  }
 
   const timeLeftFormat = () => {
 
@@ -204,6 +262,10 @@ export default function Home({navigation}) {
 
   const history = () => {
     navigation.push('History')
+  }
+
+  const calendar = () => {
+    navigation.push('Calendar')
   }
 
   const wearOrRemoveMask = async () =>{
@@ -370,6 +432,16 @@ export default function Home({navigation}) {
                 </View>
               </View>
             </TouchableWithoutFeedback>
+            <TouchableWithoutFeedback onPress={() => {calendar()}}>
+              <View style={[styles.button, styles.shadow, styles.prevMask, {backgroundColor: "#f5695f"}]}>
+                <View style={[styles.btnIcon ]}>
+                  <Image source={ require('../assets/calendar.png')  } style={styles.imageStyle} />
+                </View>
+                <View style={[styles.btnInfo ]}>
+                  <Text style={[styles.btnInfoHeader, {color: "white"}]}>{"Events"} </Text>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
             <TouchableWithoutFeedback onPress={() => {wearOrRemoveMask(true)}}>
               <View style={[styles.button, styles.shadow, styles.prevMask]}>
                 <View style={[styles.btnIcon ]}>
@@ -390,7 +462,14 @@ export default function Home({navigation}) {
                 </View>
               </View>
               <View style={[styles.btnInfoDescriptionCont ]}>
-                <Text style={styles.btnInfoDescription}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </Text>
+                {/* <Text style={styles.btnInfoDescription}> */}
+                  <Text style={{marginBottom: 0}}>Wash or sanitise your hands before putting it on{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>Ensure the mask goes up to the bridge of your nose and all the way down under your chin{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>Tighten the loops or ties so it’s snug around your face{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>Avoid touching your face, or the parts of the mask that cover your nose and mouth{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>Wash or sanitise your hands before taking it off{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>Use the ear loops to take the mask off and wash or sanitise your hands afterwards{'\n'}</Text>
+                {/* </Text> */}
               </View>
             </View>
           </View>

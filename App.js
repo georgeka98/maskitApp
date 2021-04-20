@@ -56,8 +56,8 @@ export default function App() {
   useEffect(() => {
     load('welcomeScreen')
     load('auth')
-    // remove('welcomeScreen');
-    // remove('auth');
+    remove('welcomeScreen');
+    remove('auth');
   }, [])
 
   // const isLoadingComplete = useCachedResources();
