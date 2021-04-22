@@ -12,6 +12,8 @@ import YourMasks from '../screens/YourMasks';
 import User from '../screens/User';
 import SelectHistoryMenu from '../screens/SelectHistoryMenu';
 import MasksUsedHistory from '../screens/MasksUsedHistory';
+import Events from '../screens/Events';
+import AddEvent from '../screens/AddEvent';
 import MyImpact from '../screens/MyImpact';
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -47,6 +49,8 @@ const HomeStackNavigator = () => {
             <Stack.Screen name="Select Mask" component={AddMask} ></Stack.Screen>
             <Stack.Screen name="Your Masks" component={YourMasks} ></Stack.Screen>
             <Stack.Screen name="History" component={SelectHistoryMenu} ></Stack.Screen>
+            <Stack.Screen name="Events" component={Events} ></Stack.Screen>
+            <Stack.Screen name="AddEvent" component={AddEvent} ></Stack.Screen>
             <Stack.Screen name="Masks Worn History" component={MasksUsedHistory} ></Stack.Screen>
             <Stack.Screen name="My impact" component={MyImpact} ></Stack.Screen>
       <Stack.Screen name="User" component={User} ></Stack.Screen>

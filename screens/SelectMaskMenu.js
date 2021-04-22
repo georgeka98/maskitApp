@@ -8,7 +8,7 @@ import AppButton from '../components/TouchButton';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function AddMask({navigation}) {
+export default function Events({navigation}) {
 
   // render() {
 

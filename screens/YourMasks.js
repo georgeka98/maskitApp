@@ -255,12 +255,28 @@ export default function YourMasks({navigation}) {
               <AppButton title={wearingMaskID != maskExpand.id ? "Wear" : "Remove"}  onPress={() => wearMask(maskExpand)} btnStyle={[welcomeBtnStyles.btn, styles.getit]}  textStyle={welcomeBtnStyles.btnText} />
             </ModalPoup>
 
-            <View              style={styles.search} >
+            <View style={styles.search} >
             <SearchBar
               placeholder="Type Here..."
+              // showLoading={false}
+          platform={Platform.OS}
+          // clearIcon={true}
               onChangeText={(value) => updateSearch(value)}
               value={search}
+              inputContainerStyle={{backgroundColor: 'white'}}
+              leftIconContainerStyle={{backgroundColor: 'white'}}
+              inputStyle={{backgroundColor: 'white'}}
+              containerStyle={{
+              // backgroundColor: '#1e3d59',
+              justifyContent: 'space-around',
+              borderTopWidth:0,
+              borderBottomWidth:0,
+              height: 60,
+              borderRadius: 25,
+              marginBottom: 0,
+              }}
             />
+            
             </View>
               {filteredList.map((item,index) => (
                 <TouchableWithoutFeedback key={item.id} onPress={()=> {viewMask(item.name, item.image, item.description, item.activity, item.purchase_link, item.id, item.maxWearTime, item.price)}}>
@@ -283,7 +299,11 @@ export default function YourMasks({navigation}) {
 }
 
 const styles = StyleSheet.create({
-
+  search:{
+    marginBottom: 22, 
+    borderRadius: 10,
+    backgroundColor: "#fff",
+  },
     modalBackGround: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.5)',

@@ -73,12 +73,12 @@ export default function Home({navigation}) {
         }
       }
       else{
-        if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 1800){ // 30 minutes left till mask wears out
+        if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 21590){ // 30 minutes left till mask wears out
           setWearingMaskColor(2);
           setWearingMaskLabel(maskWearingMesseges[2]);
           setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
 
-          if(maskUsing.maxWearTime - (timeNow - maskUseBegun) > 1798){
+          if(maskUsing.maxWearTime - (timeNow - maskUseBegun) > 21588){
             if(!notificationsSent[0]){
               schedulePushNotification(notifications[0][0],notifications[0][1]);
               setNotificationsSent([true,false])
@@ -123,7 +123,7 @@ export default function Home({navigation}) {
     });
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log(response);
+      
     });
 
     return () => {
@@ -157,7 +157,6 @@ export default function Home({navigation}) {
         return;
       }
       token = (await Notifications.getExpoPushTokenAsync()).data;
-      console.log(token);
     } else {
       alert('Must use physical device for Push Notifications');
     }
@@ -195,56 +194,59 @@ export default function Home({navigation}) {
 
   }, [netInfo.type.toLowerCase(),netInfo.isConnected]);
 
-  const downloadFromFirebase = () => {
+  const downloadFromFirebase = async () => {
+    let masksFormatted = [];
 
-    if(netInfo.type.toLowerCase() == "wifi" && netInfo.isConnected){
+    await firebase
+      .firestore()
+      .collection("masksample")
+      .get()
+      .then(async (querySnapshot) => {
+ 
+        await querySnapshot.forEach(async (doc) => {
 
-      firebase.firestore().collection("masksample").get().then(querySnapshot => {
+          var storage = await firebase.storage().ref();
+          let imgPath = "mask-sample-images/mask_" + doc.id + ".jpg";
+ 
+          await storage
+            .child(imgPath)
+            .getDownloadURL()
+            .then((url) => {
+              // `url` is the download URL for 'images/stars.jpg'
 
-        let masksFormatted = [];
+              let obj = doc.data()
+              obj.image = url
+              obj.id = doc.id;
 
-        querySnapshot.forEach(doc => {
+              // console.log(obj)
 
-          console.log(doc.id, '=>', doc.data());
+              masksFormatted.push(obj);
 
-          masksFormatted.push(doc.data())
-          
-          var storageRef = firebase.storage().ref();
+              console.log(obj)
 
-          storageRef.child('images/stars.jpg').getDownloadURL()
-          .then((url) => {
-            // `url` is the download URL for 'images/stars.jpg'
+ 
+              // This can be downloaded directly:
+              var xhr = new XMLHttpRequest();
+              xhr.responseType = "blob";
+              xhr.onload = (event) => {
+                var blob = xhr.response;
+              };
+              xhr.open("GET", url);
+              xhr.send();
+ 
 
-            // This can be downloaded directly:
-            var xhr = new XMLHttpRequest();
-            xhr.responseType = 'blob';
-            xhr.onload = (event) => {
-              var blob = xhr.response;
-            };
-            xhr.open('GET', url);
-            xhr.send();
-
-            // Or inserted into an <img> element
-            var img = document.getElementById('myimg');
-            img.setAttribute('src', url);
-          })
-          .catch((error) => {
-            // Handle any errors
-          });
-
-          // // Create a reference from an HTTPS URL
-          // // Note that in the URL, characters are URL escaped!
-          // var httpsReference = storage.refFromURL('https://firebasestorage.googleapis.com/b/bucket/o/images%20stars.jpg');
-
+              // Or inserted into an <img> element
+              // var img = document.getElementById('myimg');
+              // img.setAttribute('src', url);
+            })
+            .catch((error) => {
+              // Handle any errors
+            });
         });
+      });
 
-        console.log(JSON.stringify(masksFormatted))
+  };
 
-      })
-
-    }
-
-  }
 
   const timeLeftFormat = () => {
 
@@ -265,7 +267,7 @@ export default function Home({navigation}) {
   }
 
   const calendar = () => {
-    navigation.push('Calendar')
+    navigation.push('Events')
   }
 
   const wearOrRemoveMask = async () =>{
@@ -305,7 +307,6 @@ export default function Home({navigation}) {
           // store mask used to history mask usage
           let masksWornHistory = await AsyncStorage.getItem("masksWornHistory");
 
-          console.log(masksWornHistory,maskWornDetailsObj)
   
           if(masksWornHistory === null)
           {

@@ -24,6 +24,41 @@ export function durationFormat(date){
 
 }
 
+export async function addEventStore(obj){
+  let todoList = await AsyncStorage.getItem("TODO");
+
+  if(todoList === null)
+  {
+    AsyncStorage.setItem("TODO", JSON.stringify([obj]));
+  }
+  else{
+    todoList = JSON.parse(todoList);
+    todoList.push(obj)
+
+    AsyncStorage.setItem("TODO", JSON.stringify(todoList));
+  }
+}
+
+export async function UpdateEvent(date, ){
+  try{
+    let todoList = await AsyncStorage.getItem("TODO");
+
+    if(todoList === null)
+    {
+      AsyncStorage.setItem("TODO", JSON.stringify([obj]));
+    }
+    else{
+      todoList = JSON.parse(todoList);
+      todoList.push(obj)
+  
+      AsyncStorage.setItem("TODO", JSON.stringify(todoList));
+    }
+  }
+  catch(e){
+    // throw error
+  }
+}
+
 export async function storeData(){
 
   try {

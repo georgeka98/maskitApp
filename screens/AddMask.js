@@ -15,14 +15,17 @@ export default function AddMask({navigation}) {
 
     const [selectedMasks, setSelectedMasks] = useState([]);
     const [visibility,setVisibility] = useState(false);
-    const [maskExpand,setMaskExpand] = useState({title: "f", image: "../assets/masks/mask-1.png", description: "", activity: "", purchase_link: "https://mask-it.com", id: "0"});
+    const [maskExpand,setMaskExpand] = useState({title: "f", image: "../assets/masks/mask-1.png", description: "", activity: [], purchase_link: "https://mask-it.com", id: "0"});
     const [search,setSearch] = useState('');
     const [maskList, setMaskList] = useState(masksListJSON)
     const [filteredList, setFilteredList] = useState(masksListJSON)
+    const [activityColour, setActivityColour] = useState({"walking": "#5EA9BE" ,"healthcare": '#16C2D5', "construction": "#EDB79A", "agriculture": "#79B668", "no glasses": "#2F3640", "asbestols protection": "#786E6D", "aerosols protection": "#9D7161", "general": '#62CCFB', "travel": '#1F4F8B', "school": "#E1413E", "playground": "#4CD565", "training": "#8D1D1C"})
 
     const updateSearch = (search) => {
-      setSearch( search );
-      setFilteredList(maskList.filter(i=>i.name.includes(search)))
+      let query = search.toLowerCase()
+      setSearch( query );
+      //i.name.includes(query) || 
+      setFilteredList(maskList.filter(i=>(i.activity.join().includes(query))))
     };
 
     const viewMask = (title,image,description,activity,purchase_link,id,maxWearTime,cost) => {
@@ -174,6 +177,27 @@ export default function AddMask({navigation}) {
                 <View>
                   <Text style={styles.description}>{maskExpand.description}</Text>
                 </View>
+
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: '#BDC6D8',
+                    marginVertical: 10,
+                    alignSelf: 'left'
+                  }}
+                >
+                  Best Suited For
+                </Text>
+                <View style={{ flexWrap: 'wrap', alignSelf: 'left', marginBottom: 25 }}>
+                  {maskExpand.activity.map((item,index) => (
+                    <View key={item.id} style={[styles.tag, {backgroundColor: activityColour[maskExpand.activity[index]]}]}>
+                      <Text style={{ textAlign: 'center', fontSize: 14, color: "#fff", fontWeight: "700" }}>
+                      {maskExpand.activity[index]}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+
                 <View style={{alignSelf: 'left'}}>
                   <Text style={styles.maskStats}>Max Usage: {durationFormat((maskExpand.maxWearTime))}</Text>
                 </View>
@@ -188,9 +212,51 @@ export default function AddMask({navigation}) {
             <View style={styles.search} >
             <SearchBar
               placeholder="Type Here..."
+              // showLoading={false}
+          platform={Platform.OS}
+          // clearIcon={true}
               onChangeText={(value) => updateSearch(value)}
               value={search}
+              inputContainerStyle={{backgroundColor: 'white'}}
+              leftIconContainerStyle={{backgroundColor: 'white'}}
+              inputStyle={{backgroundColor: 'white'}}
+              containerStyle={{
+              // backgroundColor: '#1e3d59',
+              justifyContent: 'space-around',
+              borderTopWidth:0,
+              borderBottomWidth:0,
+              height: 60,
+              borderRadius: 25,
+              marginBottom: 0,
+              }}
             />
+            
+            </View>
+            <Text
+              style={{
+                fontSize: 14,
+                color: '#9da4b3',
+                marginVertical: 10,
+              }}
+            >
+              Suggestion
+            </Text>
+            <View style={{ flexDirection: 'row', marginBottom: 20 }}>
+              <View style={[styles.tag,{backgroundColor: activityColour["walking"]}]}>
+                <Text style={{ textAlign: 'center', color: "#fff", fontWeight: "700", fontSize: 14 }}>
+                  Walking
+                </Text>
+              </View>
+              <View style={[styles.tag,{backgroundColor: activityColour["general"]}]}>
+                <Text style={{ textAlign: 'center', color: "#fff", fontWeight: "700", fontSize: 14 }}>
+                  General
+                </Text>
+              </View>
+              <View style={[styles.tag,{backgroundColor: activityColour["training"]}]}>
+                <Text style={{ textAlign: 'center', color: "#fff", fontWeight: "700", fontSize: 14 }}>
+                  Training
+                </Text>
+              </View>
             </View>
               {filteredList.map((item,index) => (
                 <TouchableWithoutFeedback key={item.id} onPress={()=> {viewMask(item.name, item.image, item.description, item.activity, item.purchase_link, item.id, item.maxWearTime, item.price)}}>
@@ -200,6 +266,17 @@ export default function AddMask({navigation}) {
                     </View>
                     <View style={[styles.btnInfo]}>
                       <Text style={[styles.btnInfoHeader, {color: "white"}]}>{item.name}</Text>
+                    </View>
+                    <View style={{ flexWrap: 'wrap', alignSelf: 'left', marginBottom: 25 }}>
+                      { item.activity.map((item,index) => (
+                        (item.activity != undefined  && 
+                          <View key={item.id} style={[styles.tag, {backgroundColor: activityColour[item.activity[index]]}]}>
+                            <Text style={{ textAlign: 'center', fontSize: 14, color: "#fff", fontWeight: "700" }}>
+                            {maskExpand.activity[index]}
+                            </Text>
+                          </View>
+                        )
+                      ))}
                     </View>
                   </View>
                 </TouchableWithoutFeedback>
@@ -299,6 +376,7 @@ const styles = StyleSheet.create({
   search:{
     marginBottom: 22, 
     borderRadius: 10,
+    backgroundColor: "#fff",
   },
   title:{
     fontSize: 24,
@@ -311,5 +389,17 @@ const styles = StyleSheet.create({
   },
   maskStats:{
     fontSize: 16,
-  }
+  },
+
+  tag: {
+    height: 23,
+    // width: 83,
+    padding:3,
+    paddingLeft: 5,
+    paddingRight: 5,
+    justifyContent: 'center',
+    borderRadius: 5,
+    marginRight: 7,
+    marginBottom: 5
+  },
 });

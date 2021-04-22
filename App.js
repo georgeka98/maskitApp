@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import Defaults from "./constrains/Defaults";
 
 import 'react-native-gesture-handler';
 
@@ -21,6 +22,7 @@ const { width, height } = Layouts.window;
 
 export default function App() {
   
+  console.disableYellowBox = true;
 
   const [welcomeScreen, setWelcomeScreen] = useState();
   const [loading, setLoading] = useState(false);
@@ -56,8 +58,8 @@ export default function App() {
   useEffect(() => {
     load('welcomeScreen')
     load('auth')
-    remove('welcomeScreen');
-    remove('auth');
+    // remove('welcomeScreen');
+    // remove('auth');
   }, [])
 
   // const isLoadingComplete = useCachedResources();
