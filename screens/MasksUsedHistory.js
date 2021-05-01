@@ -48,11 +48,12 @@ export default function YourMasks({navigation}) {
         let wearingMaskCheck = await AsyncStorage.getItem( 'currentMaskUsing' );
 
         usedMasks = JSON.parse(usedMasks);
+
+        console.log(usedMasks)
+
         masksArrayCheck = JSON.parse(masksArrayCheck);
         let masksObj = {};
         let historyMasksArr = [];
-
-        console.log(masksObj)
 
         if(usedMasks !== null)
         {
@@ -62,7 +63,7 @@ export default function YourMasks({navigation}) {
             masksObj[masksArrayCheck[i].id] = masksArrayCheck[i]
           }
 
-          for(let i = usedMasks.length - 1; i > 0; i--)
+          for(let i = usedMasks.length - 1; i > -1; i--)
           {
             
             let mask = {...masksObj[usedMasks[i].maskID]};
@@ -75,6 +76,8 @@ export default function YourMasks({navigation}) {
 
           setMaskList(historyMasksArr);
           setFilteredList(historyMasksArr)
+          console.log(historyMasksArr)
+
         }
 
         setWearingMask(JSON.parse(wearingMaskCheck))
@@ -252,29 +255,45 @@ export default function YourMasks({navigation}) {
                 <View>
                   <Text style={styles.description}>{maskExpand.description}</Text>
                 </View>
-                <View style={{alignSelf: 'left'}}>
+                <View>
                   <Text>Max Usage: {durationFormat((maskExpand.maxWearTime))}{"\n"}</Text>
                 </View>
-                <Text style={{fontSize: 16, fontWeight: "700", alignSelf: 'left'}}>Statistics:</Text>
-                <View style={{alignSelf: 'left'}}>
+                <Text style={{fontSize: 16, fontWeight: "700"}}>Statistics:</Text>
+                <View>
                   <Text style={styles.maskStats}>Worn at: {dateFormat((maskExpand.maskWornDate)*1000)}</Text>
                 </View>
-                <View style={{alignSelf: 'left'}}>
+                <View>
                   <Text style={styles.maskStats}>Removed At: {dateFormat((maskExpand.maskRemovedDate)*1000)}</Text>
                 </View>
-                <View style={{alignSelf: 'left'}}>
+                <View>
                   <Text style={styles.maskStats}>Worn Duration: {durationFormat((maskExpand.wornDuration))}</Text>
                 </View>
               </View>
               <AppButton title={wearingMaskID != maskExpand.id ? "Wear" : "Remove"}  onPress={() => wearMask(maskExpand)} btnStyle={[welcomeBtnStyles.btn, styles.getit]}  textStyle={welcomeBtnStyles.btnText} />
             </ModalPoup>
 
-            <View style={[styles.search]} >
-            <SearchBar 
+            <View style={styles.search} >
+            <SearchBar
               placeholder="Type Here..."
+              // showLoading={false}
+          platform={Platform.OS}
+          // clearIcon={true}
               onChangeText={(value) => updateSearch(value)}
               value={search}
+              inputContainerStyle={{backgroundColor: 'white'}}
+              leftIconContainerStyle={{backgroundColor: 'white'}}
+              inputStyle={{backgroundColor: 'white'}}
+              containerStyle={{
+              // backgroundColor: '#1e3d59',
+              justifyContent: 'space-around',
+              borderTopWidth:0,
+              borderBottomWidth:0,
+              height: 60,
+              borderRadius: 25,
+              marginBottom: 0,
+              }}
             />
+            
             </View>
               {filteredList.map((item,index) => (
                 <TouchableWithoutFeedback key={index} onPress={()=> {viewMask(item.name, item.image, item.description, item.activity, item.purchase_link, item.id, item.maxWearTime, item.maskWornDate, item.maskRemovedDate, item.wornDuration)}}>

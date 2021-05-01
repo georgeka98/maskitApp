@@ -1,5 +1,10 @@
 import defaults from '../constrains/Defaults';
-import { StyleSheet } from 'react-native'
+import { Dimensions, Platform, StyleSheet, PixelRatio } from 'react-native'
+
+const {
+  width: SCREEN_WIDTH,
+  height: SCREEN_HEIGHT,
+} = Dimensions.get('window');
 
 const welcomeBtnStyles = StyleSheet.create({
   btn: {
@@ -8,9 +13,9 @@ const welcomeBtnStyles = StyleSheet.create({
     textTransform: "uppercase",
     borderRadius: 30,
     padding: 15,
-    minWidth: 150,
+    minWidth: 120,
     position: 'absolute',
-    bottom: 190,
+    bottom: SCREEN_HEIGHT/5 + ( Platform.OS === 'ios' ? 20 : 0),
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: "#000",

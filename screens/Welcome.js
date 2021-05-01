@@ -4,12 +4,13 @@ import { StyleSheet, ScrollView, View, Dimensions} from 'react-native';
 import {products} from '../constrains/WelcomeConstrains.ts'; 
 import WelcomeView from './WelcomeView';
 import palette from '../constrains/Defaults.ts';
-import layouts from '../constrains/Layouts.ts';
+import Layouts from '../constrains/Layouts.ts';
+
+const { width, height } = Layouts.window; // deconstructs the get object by returning only it's width and height
 
 export default function Welcome({ navigation }) {
 
   const [sliderState, setSliderState] = useState({ currentPage: 0 });
-  const { width, height } = layouts.window; // deconstructs the get object by returning only it's width and height
 
   const setSliderPage = (event) => {
 

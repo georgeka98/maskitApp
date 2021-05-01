@@ -23,6 +23,16 @@ import { Context } from '../components/Context';
 import {Task} from '../components/Task';
 import { addEventStore} from './helpers';
 
+import * as Notifications from 'expo-notifications';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
 const { width: vw } = Dimensions.get('window');
 // moment().format('YYYY/MM/DD')
 
@@ -30,6 +40,8 @@ const { width: vw } = Dimensions.get('window');
 
 export default class CreateTask extends Component {
   state = {
+    notificationListener: React.createRef(),
+    responseListener: React.createRef(),
     selectedDay: {
       [`${moment().format('YYYY')}-${moment().format('MM')}-${moment().format(
         'DD'
@@ -53,8 +65,39 @@ export default class CreateTask extends Component {
     createEventAsyncRes: '',
   };
 
+  schedulePushNotification = async (title, desc, time) => {
+    var ms = moment(time).add(1, "hours").local().diff(moment().add(1, "hours").local());
+
+    let remindInSeconds = ms/1000;
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: title,
+        body: desc,
+        data: { data: 'goes here' },
+      },
+      trigger: { seconds: remindInSeconds },
+      
+    });
+  }
+
   async componentDidMount() {
-    const { createNewCalendar } = this.props.route.params;
+
+    Keyboard.removeListener('keyboardDidShow', this._keyboardDidShow);
+    Keyboard.removeListener('keyboardDidHide', this._keyboardDidHide);
+
+    const {notificationListener, responseListener} = this.state
+
+    this.registerForPushNotificationsAsync().then(token => this.setState({expoPushToken: token}));
+
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      this.setState({notification:notification})
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      
+    });
+
     this.keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
       this._keyboardDidShow
@@ -65,10 +108,40 @@ export default class CreateTask extends Component {
     );
   }
 
-  async componentWillUnmount() {
-    Keyboard.removeListener('keyboardDidShow', this._keyboardDidShow);
-    Keyboard.removeListener('keyboardDidHide', this._keyboardDidHide);
+  registerForPushNotificationsAsync = async () => {
+
+    let token;
+    
+    if (Constants.isDevice) 
+    {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        alert('Failed to get push token for push notification!');
+        return;
+      }
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+    } else {
+      alert('Must use physical device for Push Notifications');
+    }
+  
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+  
+    return token;
   }
+
 
   _keyboardDidShow = e => {
     this.setState({
@@ -91,10 +164,16 @@ export default class CreateTask extends Component {
     });
   };
 
-  synchronizeCalendar = async value => {
+  synchronizeCalendar = async (value) => {
+
     const { createNewCalendar } = this.props.route.params;
 
+    const {  maskReminderTime, taskText } = this.state;
+    this.schedulePushNotification("Don't forget your mask!", "Remember to wear your mask if needed before you got to '"+taskText+"'", maskReminderTime)
+
+
     const calendarId = await createNewCalendar();
+
     try {
       const createEventAsyncRes = await this._addEventsToCalendar(calendarId);
       this.setState(
@@ -122,8 +201,9 @@ export default class CreateTask extends Component {
         .add(5, 'm')
         .toDate(),
       timeZone: Localization.timezone,
-      maskReminderTime: moment(maskReminderTime),
+      // maskReminderTime: moment(maskReminderTime),
     };
+
 
     try {
       const createEventAsyncRes = await Calendar.createEventAsync(
@@ -192,9 +272,9 @@ export default class CreateTask extends Component {
     };
 
     // await value.updateTodo(creatTodo);
-    addEventStore(creatTodo)
+    await addEventStore(creatTodo)
     // await updateCurrentTask(currentDate);
-    navigation.navigate('Events');
+    navigation.push('Home');
   };
 
   _handleDatePicked = date => {
@@ -267,7 +347,7 @@ export default class CreateTask extends Component {
         changeAlarmTime,
         isDateTimePickerVisible,
       },
-      props: { navigation },
+      props: { navigation, createNewCalendar },
     } = this;
 
 

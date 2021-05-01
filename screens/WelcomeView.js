@@ -2,7 +2,6 @@ import { StyleSheet, View, Image, PixelRatio, Text} from 'react-native';
 import Layouts from '../constrains/Layouts.ts';
 import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import layouts from '../constrains/Layouts.ts';
 import { welcomeBtnStyles } from '../styles/welcomeBtn';
 import defaults from '../constrains/Defaults';
 import AppButton from '../components/TouchButton';
@@ -13,7 +12,6 @@ import { Constants, Notifications } from 'expo';
 export default function WelcomeView( props ) {
 
   const [welcomeScreen, setWelcomeScreen] = useState();
-  const { width, height } = layouts.window; // deconstructs the get object by returning only it's width and height
 
   // save/update item
   const save = async () => {
@@ -65,15 +63,15 @@ export default function WelcomeView( props ) {
   return(
     <View style={{ width: Layouts.window.width, height: Layouts.window.height, backgroundColor: "#fff"} }>
       <View style={styles.image}>
-        <Image source={props.img } style={styles.imageStyle} />
+        <Image source={props.img } style={styles.imageStyle} resizeMode="contain" />
       </View>
       <View style={styles.infoCont}>
         <Text style={styles.header}>{props.title}</Text>
         <Text style={styles.text}>{props.description}</Text>
 
         {props.idx === props.totSlides-1 ? <AppButton title="Done"  onPress={() => save()} btnStyle={welcomeBtnStyles.btn}  textStyle={welcomeBtnStyles.btnText}  /> : <></> }
-        {props.idx === 0 ? <AppButton title="Get Started" onPress={() => { props.scroll.current.scrollTo({x: width*(props.idx + 1), y: 0, animated: true}) }} btnStyle={welcomeBtnStyles.btn}  textStyle={welcomeBtnStyles.btnText} /> : <></> }
-        {props.idx > 0 && props.idx < props.totSlides-1 ? <AppButton title="Next" onPress={() => { props.scroll.current.scrollTo({x: width*(props.idx + 1), y: 0, animated: true}); getiOSNotificationPermission(props.idx); }} btnStyle={welcomeBtnStyles.btn}  textStyle={welcomeBtnStyles.btnText}  /> : <></> }
+        {props.idx === 0 ? <AppButton title="Get Started" onPress={() => { props.scroll.current.scrollTo({x: Layouts.window.width*(props.idx + 1), y: 0, animated: true}) }} btnStyle={welcomeBtnStyles.btn}  textStyle={welcomeBtnStyles.btnText} /> : <></> }
+        {props.idx > 0 && props.idx < props.totSlides-1 ? <AppButton title="Next" onPress={() => { props.scroll.current.scrollTo({x: Layouts.window.width*(props.idx + 1), y: 0, animated: true}); getiOSNotificationPermission(props.idx); }} btnStyle={welcomeBtnStyles.btn}  textStyle={welcomeBtnStyles.btnText}  /> : <></> }
       </View>
     </View>
   )
@@ -87,9 +85,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   imageStyle: {
-    height: PixelRatio.getPixelSizeForLayoutSize(170),
-    width: '80%',
+    height:'80%', 
+      width:'100%',
   },
+  //PixelRatio.getPixelSizeForLayoutSize(170)
   text: {
     backgroundColor: '#fff',
     fontFamily: defaults.text.fontFamily,

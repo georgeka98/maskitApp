@@ -24,8 +24,13 @@ export default function AddMask({navigation}) {
     const updateSearch = (search) => {
       let query = search.toLowerCase()
       setSearch( query );
-      //i.name.includes(query) || 
-      setFilteredList(maskList.filter(i=>(i.activity.join().includes(query))))
+
+      if(search == ""){
+        setFilteredList(maskList)
+      }
+      else{        
+        setFilteredList(maskList.filter(i=>i.activity.join().includes(search)))
+      }
     };
 
     const viewMask = (title,image,description,activity,purchase_link,id,maxWearTime,cost) => {
@@ -183,12 +188,12 @@ export default function AddMask({navigation}) {
                     fontSize: 14,
                     color: '#BDC6D8',
                     marginVertical: 10,
-                    alignSelf: 'left'
+                    
                   }}
                 >
                   Best Suited For
                 </Text>
-                <View style={{ flexWrap: 'wrap', alignSelf: 'left', marginBottom: 25 }}>
+                <View style={{ flexWrap: 'wrap', marginBottom: 25 }}>
                   {maskExpand.activity.map((item,index) => (
                     <View key={item.id} style={[styles.tag, {backgroundColor: activityColour[maskExpand.activity[index]]}]}>
                       <Text style={{ textAlign: 'center', fontSize: 14, color: "#fff", fontWeight: "700" }}>
@@ -198,10 +203,10 @@ export default function AddMask({navigation}) {
                   ))}
                 </View>
 
-                <View style={{alignSelf: 'left'}}>
+                <View>
                   <Text style={styles.maskStats}>Max Usage: {durationFormat((maskExpand.maxWearTime))}</Text>
                 </View>
-                <View style={{alignSelf: 'left'}}>
+                <View>
                   <Text style={styles.maskStats}>Price: {maskExpand.cost} $</Text>
                 </View>
               </View>
@@ -267,7 +272,7 @@ export default function AddMask({navigation}) {
                     <View style={[styles.btnInfo]}>
                       <Text style={[styles.btnInfoHeader, {color: "white"}]}>{item.name}</Text>
                     </View>
-                    <View style={{ flexWrap: 'wrap', alignSelf: 'left', marginBottom: 25 }}>
+                    <View style={{ flexWrap: 'wrap', marginBottom: 25 }}>
                       { item.activity.map((item,index) => (
                         (item.activity != undefined  && 
                           <View key={item.id} style={[styles.tag, {backgroundColor: activityColour[item.activity[index]]}]}>

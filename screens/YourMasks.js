@@ -26,7 +26,13 @@ export default function YourMasks({navigation}) {
 
     const updateSearch = (search) => {
       setSearch( search );
-      setFilteredList(maskList.filter(i=>i.name.includes(search)))
+      console.log(search)
+      if(search == ""){
+        setFilteredList(maskList)
+      }
+      else{        
+        setFilteredList(maskList.filter(i=>i.name.includes(search)))
+      }
     };
 
     const viewMask = (title,image,description,activity,purchase_link,id,maxWearTime,cost) => {
@@ -164,6 +170,28 @@ export default function YourMasks({navigation}) {
       );
     }
 
+    const deleteMask = async (mask) => 
+    {
+      let masksArray = await AsyncStorage.getItem('selectedMasks');
+      masksArray = JSON.parse(masksArray);
+
+      for(let i = 0; i < selectedMasksFilter.length; i++)
+      {
+
+        if(selectedMasksFilter[i].id == mask){
+          selectedMasksFilter.splice(i, 1);
+          break;
+        }
+      }
+
+      let idx = masksArray.indexOf(mask)
+      masksArray.splice(idx,1)
+
+      setVisibility(false)
+
+      AsyncStorage.setItem("selectedMasks", JSON.stringify(masksArray));
+    }
+
     const wearMask = async (mask) => {
 
       try{
@@ -245,14 +273,15 @@ export default function YourMasks({navigation}) {
                 <View>
                   <Text style={styles.description}>{maskExpand.description}</Text>
                 </View>
-                <View style={{alignSelf: 'left'}}>
+                <View>
                   <Text style={styles.maskStats}>Max Usage: {durationFormat((maskExpand.maxWearTime))}</Text>
                 </View>
-                <View style={{alignSelf: 'left'}}>
+                <View>
                   <Text style={styles.maskStats}>Price: {maskExpand.cost} $</Text>
                 </View>
               </View>
               <AppButton title={wearingMaskID != maskExpand.id ? "Wear" : "Remove"}  onPress={() => wearMask(maskExpand)} btnStyle={[welcomeBtnStyles.btn, styles.getit]}  textStyle={welcomeBtnStyles.btnText} />
+              <AppButton title={"Delete"}  onPress={() => {deleteMask(maskExpand.id)}} btnStyle={[welcomeBtnStyles.btn, styles.add]}  textStyle={welcomeBtnStyles.btnText}  />
             </ModalPoup>
 
             <View style={styles.search} >

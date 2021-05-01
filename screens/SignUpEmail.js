@@ -89,6 +89,9 @@ export default function SignUpEmail({navigation}) {
             <View style={RegisterDefaults.otherRegisterView}>
                 <JoinNavLink onPress={() => onLoginPress()} btnStyle={[RegisterDefaults.changeRegistrationBtn]} textStyle={RegisterDefaults.otherRegisterViewText} titleInfo={"Have an account?"} btnTitle={"Login here"} ></JoinNavLink>
               </View>
+              <View style={RegisterDefaults.otherRegisterView}>
+              <JoinNavLink onPress={() => navigation.navigate('Register')} btnStyle={[RegisterDefaults.changeRegistrationBtn]} textStyle={RegisterDefaults.otherRegisterViewText} titleInfo={"Back to "} btnTitle={"Main Menu"} ></JoinNavLink>
+            </View>
 
           </View>
       </TouchableWithoutFeedback>

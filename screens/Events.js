@@ -167,6 +167,15 @@ export default class Home extends Component {
 
   async componentDidMount() {
     // AsyncStorage.setItem("TODO", "");
+
+    this.props.navigation.addListener(
+      'didFocus',
+      payload => {
+        this.forceUpdate();
+      }
+    );
+
+    console.log("jh")
     await this._askForCalendarPermissions();
     await this._askForReminderPermissions();
     this._handleDeletePreviousDayTask();
@@ -188,10 +197,13 @@ export default class Home extends Component {
 
     const { currentDate } = this.state;
     try {
+      // AsyncStorage.removeItem('TODO');
       const value = await AsyncStorage.getItem('TODO');
 
       if (value !== null) {
         const todoList = JSON.parse(value);
+
+        // console.log(todoList)
 
         const todayDate = `${moment().format('YYYY')}-${moment().format(
           'MM'

@@ -78,6 +78,9 @@ export default function Login({ navigation }) {
             <View style={RegisterDefaults.otherRegisterView}>
               <JoinNavLink onPress={() => onRegisterPress()} btnStyle={[RegisterDefaults.changeRegistrationBtn]} textStyle={RegisterDefaults.otherRegisterViewText} titleInfo={"Don’t have an account?"} btnTitle={"Register here"} ></JoinNavLink>
             </View>
+            <View style={RegisterDefaults.otherRegisterView}>
+              <JoinNavLink onPress={() => navigation.navigate('Register')} btnStyle={[RegisterDefaults.changeRegistrationBtn]} textStyle={RegisterDefaults.otherRegisterViewText} titleInfo={"Back to "} btnTitle={"Main Menu"} ></JoinNavLink>
+            </View>
           </View>
       </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

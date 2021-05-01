@@ -1,12 +1,11 @@
-import React, { useEffect, state } from "react";
+import React, { useEffect, state, setState, updateState, Component } from "react";
 
 import {StyleSheet, Keyboard, Text, View, TouchableWithoutFeedback, KeyboardAvoidingView, Image, ScrollView, Alert, Button} from 'react-native';
 import Defaults from "../constrains/Defaults";
 import AddMask from './AddMask';
-import {useNetInfo} from "@react-native-community/netinfo";
+// import {useNetInfo} from "@react-native-community/netinfo";
 
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { firestore } from "firebase";
@@ -14,6 +13,7 @@ import firebase from 'firebase';
 import 'firebase/firestore';
 
 // import styled from 'styled-components';
+import * as Notifications from 'expo-notifications';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -23,116 +23,158 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default function Home({navigation}) {
+export default class Home extends Component {
 
-  const maskWearingColors = ["#3ED47D", "#EFCC74", "#EF7474"];
-  const maskWearingMesseges = ["Not Wearing Mask", "Wearing Mask", "Remove Soon", "Mask Overtime"];
-  const notifications = [["Remove mask soon!", 'Your mask needs to be removed within 30 minutes.'],["Remove mask!", 'Your mask needs to be disposed within 1 minute.']];
-  const netInfo = useNetInfo();
 
-  const [expoPushToken, setExpoPushToken] = React.useState('');
-  const [notification, setNotification] = React.useState(false);
-  const notificationListener = React.useRef();
-  const responseListener = React.useRef();
-  const [notificationsSent, setNotificationsSent] = React.useState([false,false])
+  constructor(props){
+    super(props);
+    this.state= {
+      maskWearingColors: ["#3ED47D", "#EFCC74", "#EF7474"],
+      maskWearingMesseges: ["Not Wearing Mask", "Wearing Mask", "Remove Soon", "Mask Overtime"],
+      notifications: [["Recommended time almost over", 'Your mask is recommended to be removed within 30 minutes if possible.'],["Recommended time over", 'Your mask is recommended to be disposed or cleaned and switched to a new one within 1 minute if possible.']],
+      // netInfo: useNetInfo(),
+      notificationListener: React.createRef(),
+      responseListener: React.createRef(),
+      expoPushToken: "",
+      notification: false,
+      notificationsSent: [false,false],
+      intervalRef: null,
+      maskUsing: null,
+      maskUseBegun: null,
+      wearingMaskColor: 0,
+      wearingMaskLabel: 0,
+      wearingMaskTimeLeft: 0,
+    }
+  }
 
-  const [intervalRef, setIntervalRef] = React.useState(null)
-  const [maskUsing, setMaskUsing] = React.useState(null);
-  const [maskUseBegun, setMaskUseBegun] = React.useState(null);
-  const [wearingMaskColor, setWearingMaskColor] = React.useState(0);
-  const [wearingMaskLabel, setWearingMaskLabel] = React.useState(maskWearingMesseges[0]);
-  const [wearingMaskTimeLeft, setWearingMaskTimeLeft] = React.useState(0); // in minutes
 
   // 0 = green - not wearing mask
   // 1 = orange - wearing mask
   // 2 = red - mask overdue/soon to remove
+  
+  timer = () => {
 
-  const updateMessage = async () =>{
+      const {maskUsing, maskUseBegun, notificationsSent, notifications} = this.state;
+
+      let timeNow = String(parseInt(Date.now()/1000)); // current time in seconds
     
-    let timeNow = String(parseInt(Date.now()/1000)); // current time in seconds
-
-    if(maskUsing === null && maskUseBegun === null)
-    {
-      setWearingMaskColor(0);
-      setWearingMaskLabel(maskWearingMesseges[0]);
-      setWearingMaskTimeLeft(0)
-    }
-    else
-    {
-      if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 0){ // mask expired
-        setWearingMaskColor(2);
-        setWearingMaskLabel(maskWearingMesseges[3]);
-        setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
-
-
-        if(maskUsing.maxWearTime - (timeNow - maskUseBegun) > -2){
-          if(!notificationsSent[1]){
-            schedulePushNotification(notifications[1][0],notifications[1][1]);
-            setNotificationsSent([true,true])
-          }
-        }
+      if(maskUsing === null && maskUseBegun === null)
+      {
+        this.setState({wearingMaskColor:0, wearingMaskLabel: 0, wearingMaskTimeLeft: 0})
       }
-      else{
-        if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 21590){ // 30 minutes left till mask wears out
-          setWearingMaskColor(2);
-          setWearingMaskLabel(maskWearingMesseges[2]);
-          setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
+      else
+      {
+        if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 0){ // mask expired
+          this.setState({wearingMaskColor:2, wearingMaskLabel: 3, wearingMaskTimeLeft: maskUsing.maxWearTime - (timeNow - maskUseBegun)})
 
-          if(maskUsing.maxWearTime - (timeNow - maskUseBegun) > 21588){
-            if(!notificationsSent[0]){
-              schedulePushNotification(notifications[0][0],notifications[0][1]);
-              setNotificationsSent([true,false])
+          if(maskUsing.maxWearTime - (timeNow - maskUseBegun) > -2){
+            if(!notificationsSent[1]){
+              this.schedulePushNotification(notifications[1][0],notifications[1][1]);
+              this.setState({notifications:[true,true]})
             }
           }
         }
         else{
-          setWearingMaskColor(1);
-          setWearingMaskLabel(maskWearingMesseges[1]);
-          setWearingMaskTimeLeft(maskUsing.maxWearTime - (timeNow - maskUseBegun));
+          if(maskUsing.maxWearTime - (timeNow - maskUseBegun) < 1800){ // 30 minutes left till mask wears out
+
+            this.setState({wearingMaskColor:2, wearingMaskLabel: 2, wearingMaskTimeLeft: maskUsing.maxWearTime - (timeNow - maskUseBegun)})
+
+            if(maskUsing.maxWearTime - (timeNow - maskUseBegun) > 1798){
+              if(!notificationsSent[0]){
+                this.schedulePushNotification(notifications[0][0],notifications[0][1]);
+                this.setState({notifications:[true,false]})
+              }
+            }
+          }
+          else{
+            this.setState({wearingMaskColor:1, wearingMaskLabel: 1, wearingMaskTimeLeft: maskUsing.maxWearTime - (timeNow - maskUseBegun)})
+          }
         }
       }
-    }
-  }
-  
-  const timer = () => {
-    
-    const interval = setInterval(() => {
 
-      updateMessage(maskUsing, maskUseBegun)
-    }, 1000 );
-
-    setIntervalRef(interval)
-
-    return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+    // return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
   }
 
   // execute only when maskUsing and maskUseBegun have been changed
-  React.useEffect(() => {
-    if (maskUsing !=  null && maskUseBegun != null) {
-      updateMessage(maskUsing, maskUseBegun)
-      timer();
-    }
-  }, [maskUsing, maskUseBegun]);
+  // useEffect(() => {
+  //   if (maskUsing !=  null && maskUseBegun != null) {
+  //     updateMessage(maskUsing, maskUseBegun)
+  //     timer();
+  //   }
+  // }, [maskUsing, maskUseBegun]);
 
   // notifications 
-  React.useEffect(() => {
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+  async componentDidMount() {
+
+    const {notificationListener, responseListener, maskWearingMesseges} = this.state
+
+    this.registerForPushNotificationsAsync().then(token => this.setState({expoPushToken: token}));
 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      setNotification(notification);
+      this.setState({notification:notification})
     });
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       
     });
 
+    this.intervalId = setInterval(this.timer.bind(this), 1000);
+    this.getChosenMasks()
+
+    // check if tutorial is done
+
+    try{
+      let tutorial = await AsyncStorage.getItem("tutorialDone");
+      if(tutorial == undefined || tutorial == null){
+        // do totu
+        Alert.alert(
+          "Welcome & How to Use",
+          "Thank you for downloading maskit. Here is a set of instructions on how to use the app. \n\n1. Tap on \"Select Masks\" to choose masks to wear and get a link to the purchase page (UK only for now).\n\n2. Once you purchase the mask, add it.\n\n3. Go back and tap on \"Your Masks\" to find the mask you have just added (assuming you have purchased it).\n\n4. Tap on your mask and tap on \"Wear\". MaskIt assumes you are wearing a mask now.\n\n5. Tap on \"Remove Mask\" to remove the mask.\n\n6. Tap on \"Events\" to create an event and to let MaskIt know when to remind you to wear your mask.\n\nKeep in mind the app has a recommended continuous period of wearing a mask of 6 hours. If you are still out for more than 6 hours, we encourage you to NOT throw your mask away, until you get back home.\n",
+          [
+            {
+              text: "Thank you",
+              onPress: () => Alert.alert("To review the instructions again, scroll all the way to the bottom. \n\nThank you once again for choosing us!"),
+              style: "cancel",
+            },
+          ],
+          {
+            cancelable: true,
+            onDismiss: () =>
+              Alert.alert(
+                "This alert was dismissed by tapping outside of the alert dialog."
+              ),
+          }
+        )
+        AsyncStorage.setItem("tutorialDone", "1");
+      }
+    }
+    catch(e){
+      console.log(e)
+    }
+
     return () => {
       Notifications.removeNotificationSubscription(notificationListener);
       Notifications.removeNotificationSubscription(responseListener);
     };
-  }, []);
+  }
 
-  async function schedulePushNotification(title, desc) {
+  getChosenMasks = async () => {
+
+    let maskUsingCheck = await AsyncStorage.getItem("currentMaskUsing");
+    let maskUseBegunCheck = await AsyncStorage.getItem("wearStarted");
+
+    if(maskUsingCheck != null && maskUseBegunCheck != null){
+
+      this.setState({maskUsing:JSON.parse(maskUsingCheck), maskUseBegun: parseInt(maskUseBegunCheck)}, () => {this.timer.bind(this)})
+
+    }
+    this.downloadFromFirebase();
+
+  this.downloadFromFirebase();
+
+};
+
+  schedulePushNotification = async (title, desc) => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: title,
@@ -143,10 +185,14 @@ export default function Home({navigation}) {
     });
   }
   
-  async function registerForPushNotificationsAsync() {
+  registerForPushNotificationsAsync = async () => {
+
     let token;
-    if (Constants.isDevice) {
+    
+    if (Constants.isDevice) 
+    {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
+
       let finalStatus = existingStatus;
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
@@ -172,29 +218,8 @@ export default function Home({navigation}) {
   
     return token;
   }
-  
 
-  React.useEffect(() => {
-    
-    const getChosenMasks = async () => {
-
-      let maskUsingCheck = await AsyncStorage.getItem("currentMaskUsing");
-      let maskUseBegunCheck = await AsyncStorage.getItem("wearStarted");
-
-      if(maskUsingCheck != null && maskUseBegunCheck != null){
-
-        setMaskUsing(JSON.parse(maskUsingCheck));
-        setMaskUseBegun(parseInt(maskUseBegunCheck));
-
-      }
-    }
- 
-    getChosenMasks();
-    downloadFromFirebase();
-
-  }, [netInfo.type.toLowerCase(),netInfo.isConnected]);
-
-  const downloadFromFirebase = async () => {
+  downloadFromFirebase = async () => {
     let masksFormatted = [];
 
     await firebase
@@ -222,9 +247,6 @@ export default function Home({navigation}) {
 
               masksFormatted.push(obj);
 
-              console.log(obj)
-
- 
               // This can be downloaded directly:
               var xhr = new XMLHttpRequest();
               xhr.responseType = "blob";
@@ -248,7 +270,9 @@ export default function Home({navigation}) {
   };
 
 
-  const timeLeftFormat = () => {
+  timeLeftFormat = () => {
+
+    const {wearingMaskTimeLeft} = this.state;
 
     let hours = Math.floor(wearingMaskTimeLeft / 3600);
     let minutes = Math.floor(wearingMaskTimeLeft / 60) % 60;
@@ -257,24 +281,13 @@ export default function Home({navigation}) {
     return hours+"h "+minutes+"m "+seconds+"s";
   }
 
-
-  const selectMask = () => {
-    navigation.push('Select Mask Menu')
-  }
-
-  const history = () => {
-    navigation.push('History')
-  }
-
-  const calendar = () => {
-    navigation.push('Events')
-  }
-
-  const wearOrRemoveMask = async () =>{
-
-    setNotificationsSent([false,false])
-
+  wearOrRemoveMask = async () => {
+    
     try{
+
+      this.setState({notificationsSent: [false,false]});
+
+      const {maskWearingMesseges, maskUsing, maskUseBegun} = this.state;
 
       let timeNow = String(parseInt(Date.now()/1000)); // current time in seconds
 
@@ -286,14 +299,10 @@ export default function Home({navigation}) {
         AsyncStorage.removeItem("wearStarted");
 
         // reset to no wearing mask
-        await clearInterval(intervalRef)
 
-        setMaskUsing(null);
-        setMaskUseBegun(null);
-        setWearingMaskColor(0);
-        setWearingMaskLabel(maskWearingMesseges[0]);
-        setWearingMaskTimeLeft(0);
-      
+        this.setState({maskUsing: null, maskUseBegun: null, wearingMaskColor: 0, wearingMaskLabel: 0, wearingMaskTimeLeft: 0}, () => { clearInterval(this.intervalId) }); 
+        clearInterval(this.intervalId);
+
         if(duration > 30 * 60) // mnask worn for longer than 30 minutes straight
         {
           // mask history object
@@ -388,9 +397,13 @@ export default function Home({navigation}) {
 
           AsyncStorage.setItem("currentMaskUsing", JSON.stringify(mask));
           AsyncStorage.setItem("wearStarted", String(timeNow));
+
+          console.log("hi")
   
-          setMaskUsing(mask);
-          setMaskUseBegun(timeNow);
+          this.setState({maskUsing: mask, maskUseBegun: timeNow}, () => {this.intervalId = setInterval(this.timer.bind(this), 1000);}); 
+          
+
+          console.log("hi")
         }
       }
 
@@ -404,16 +417,39 @@ export default function Home({navigation}) {
   // const masksHistoryList = MasksSelected();
 
   // render() {
-    return (
+    render() {
+
+      const {
+        state: {
+          maskWearingColors,
+          maskWearingMesseges,
+          notifications,
+          // netInfo,
+          expoPushToken,
+          notification,
+          notificationsSent,
+          intervalRef,
+          maskUsing,
+          maskUseBegun,
+          wearingMaskColor,
+          wearingMaskLabel,
+          wearingMaskTimeLeft,
+          notificationListener,
+          responseListener,
+        },
+        props: { navigation },
+      } = this;
+  
+      return (
       <KeyboardAvoidingView behavior="padding">
         <ScrollView>
           <View style={styles.homeVeiw} >
-            <View style={[styles.maskWearingCont, styles.shadow, {backgroundColor: maskWearingColors[wearingMaskColor]}]}>
+          <View style={[styles.maskWearingCont, styles.shadow, {backgroundColor: maskWearingColors[wearingMaskColor]}]}>
               <View style={styles.wearingMaskDot}></View>
-              <Text style={styles.wearingMaskLabel}>{wearingMaskLabel}</Text>
-              <Text style={styles.timeLeft}>{timeLeftFormat()}</Text>
+              <Text style={styles.wearingMaskLabel}>{maskWearingMesseges[wearingMaskLabel]}</Text>
+              <Text style={styles.timeLeft}>{this.timeLeftFormat()}</Text>
             </View>
-            <TouchableWithoutFeedback onPress={() => selectMask()}>
+            <TouchableWithoutFeedback onPress={() => navigation.push('Select Mask Menu')}>
               <View style={[styles.button, styles.shadow]}>
                 <View style={[styles.btnIcon ]}>
                   <Image source={ require('../assets/mask-white.png') } style={styles.imageStyle} />
@@ -423,7 +459,7 @@ export default function Home({navigation}) {
                 </View>
               </View>
             </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback onPress={() => history()}>
+            <TouchableWithoutFeedback onPress={() => navigation.push('History')}>
               <View style={[styles.button, styles.shadow, {backgroundColor: 'white'}]}>
                 <View style={[styles.btnIcon ]}>
                   <Image source={ require('../assets/history-blue.png') } style={styles.imageStyle} />
@@ -433,7 +469,7 @@ export default function Home({navigation}) {
                 </View>
               </View>
             </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback onPress={() => {calendar()}}>
+            <TouchableWithoutFeedback onPress={() => navigation.push('Events')}>
               <View style={[styles.button, styles.shadow, styles.prevMask, {backgroundColor: "#f5695f"}]}>
                 <View style={[styles.btnIcon ]}>
                   <Image source={ require('../assets/calendar.png')  } style={styles.imageStyle} />
@@ -443,7 +479,7 @@ export default function Home({navigation}) {
                 </View>
               </View>
             </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback onPress={() => {wearOrRemoveMask(true)}}>
+            <TouchableWithoutFeedback onPress={() => {this.wearOrRemoveMask()}}>
               <View style={[styles.button, styles.shadow, styles.prevMask]}>
                 <View style={[styles.btnIcon ]}>
                   <Image source={ maskUsing == null ? require('../assets/history-white.png') : require('../assets/cross.png')  } style={styles.imageStyle} />
@@ -459,7 +495,8 @@ export default function Home({navigation}) {
                   <Image source={ require('../assets/warningBell.png') } style={styles.healthIcon} />
                 </View>
                 <View style={[styles.healthHeader ]}>
-                  <Text style={styles.btnInfoHeader}>Guidelines from NHS</Text>
+                  <Text style={styles.btnInfoHeader}>Guidelines</Text> 
+                  {/* Guidelines from NHS */}
                 </View>
               </View>
               <View style={[styles.btnInfoDescriptionCont ]}>
@@ -473,11 +510,33 @@ export default function Home({navigation}) {
                 {/* </Text> */}
               </View>
             </View>
+
+            <View style={[styles.healthMessage, styles.shadow]}>
+              <View style={[styles.healthMessageHeader]}>
+                <View style={[styles.healthIconCont ]}>
+                  <Image source={ require('../assets/questionmark.png') } style={styles.healthIcon} />
+                </View>
+                <View style={[styles.healthHeader ]}>
+                  <Text style={styles.btnInfoHeader}>How to use ?</Text> 
+                </View>
+              </View>
+              <View style={[styles.btnInfoDescriptionCont ]}>
+                {/* <Text style={styles.btnInfoDescription}> */}
+                  <Text style={{marginBottom: 0}}>1. Tap on "Select Masks" to choose masks to wear and get a link to the purchase page (UK only for now).{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>2. Once you purchase the mask, add it.{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>3. Go back and tap on "Your Masks" to find the mask you have just added (assuming you have purchased it).{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>4. Tap on your mask and tap on "Wear". MaskIt assumes you are wearing a mask now.{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>5. Tap on "Remove Mask" to remove the mask.{'\n'}</Text>
+                  <Text style={{marginBottom: 0}}>6. Tap on "Events" to create an event and to let MaskIt know when to remind you to wear your mask.{'\n'}</Text>
+                  <Text style={{marginBottom: 0, fontWeight: "bold"}}>Keep in mind the app has a recommended continuous period of wearing a mask of 6 hours. If you are still out for more than 6 hours, we encourage you to NOT throw your mask away, until you get back home.{'\n'}</Text>
+                {/* </Text> */}
+              </View>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    );
-  // }
+      );
+  }
 }
 
 const styles = StyleSheet.create({

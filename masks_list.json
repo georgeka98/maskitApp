@@ -249,7 +249,7 @@
   "image": "https://firebasestorage.googleapis.com/v0/b/maskit-421ad.appspot.com/o/mask-sample-images%2Fmask_13.jpg?alt=media&token=b06c91cd-7b2b-4ec2-9281-c2ca1760ee2a",
 "price": 0.0,
 "maxWearTime": 21600,
-"activity": []
+"activity": ["healthcare"]
 }, {
   "Brand": "Medline",
   "Cases per layer": 3,
@@ -291,7 +291,7 @@
   "image": "https://firebasestorage.googleapis.com/v0/b/maskit-421ad.appspot.com/o/mask-sample-images%2Fmask_10.jpg?alt=media&token=00dbed44-9a4c-4710-b7d7-6b8760ca0da6",
 "price": 0.0,
 "maxWearTime": 21600,
-"activity": []
+"activity": ["walking", "general"]
 }, {
   "Brand": "Kimberly-Clark",
   "Cases per layer": "",
@@ -312,7 +312,7 @@
   "image": "https://firebasestorage.googleapis.com/v0/b/maskit-421ad.appspot.com/o/mask-sample-images%2Fmask_9.jpg?alt=media&token=ef72963d-7593-47fa-b7a0-7db81433567b",
 "price": 0.0,
 "maxWearTime": 21600,
-"activity": []
+"activity": ["healthcare"]
 }, {
   "Brand": "Kimberly-Clark",
   "Cases per layer": "",
@@ -333,7 +333,7 @@
   "image": "https://firebasestorage.googleapis.com/v0/b/maskit-421ad.appspot.com/o/mask-sample-images%2Fmask_13.jpg?alt=media&token=b06c91cd-7b2b-4ec2-9281-c2ca1760ee2a",
 "price": 0.0,
 "maxWearTime": 21600,
-"activity": []
+"activity": ["healthcare"]
 }, {
   "Brand": "Medline",
   "Cases per layer": "",
@@ -354,7 +354,7 @@
   "image": "https://firebasestorage.googleapis.com/v0/b/maskit-421ad.appspot.com/o/mask-sample-images%2Fmask_18.jpg?alt=media&token=829bb15d-65ca-43ee-b85c-57a43bf09ff4",
 "price": 0.0,
 "maxWearTime": 21600,
-"activity": []
+"activity": ["healthcare", "travel"]
 }, 
 {
   "Brand": "Crosstex",
@@ -376,5 +376,5 @@
   "image": "https://firebasestorage.googleapis.com/v0/b/maskit-421ad.appspot.com/o/mask-sample-images%2Fmask_17.jpg?alt=media&token=70acce48-8168-4df5-89c4-b8a49e4d67ba",
   "price": 0.0,
   "maxWearTime": 21600,
-  "activity": []
+  "activity": ["healthcare", "travel"]
 }]
